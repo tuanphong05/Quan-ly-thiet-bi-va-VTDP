@@ -20,12 +20,13 @@ function nhapThietBi() {
       for (let j = 0; j < m.getNumColumns(); j++) v[r0 + i][c0 + j] = val;
   });
   const dst = SS().getSheetByName('equip'), h = H.equip.split(',');
-  const have = new Set(rd('equip').map(x => [x.ten, x.pn, x.ghichu].join('|')));
+  const bo = g => String(g || '').split(' | ').filter(x => x && !x.startsWith('Nơi đặt:')).join(' | ');
+  const have = new Set(rd('equip').map(x => [x.ten, x.pn, bo(x.ghichu)].join('|')));
   const out = [];
   for (let i = DONG_TD; i < v.length; i++) {
     const [, ten, pn, sn, , noi, dp, mota] = v[i].map(x => String(x).trim());
     if (!ten) continue;
-    const ghichu = [mota, noi && 'Nơi đặt: ' + noi, dp].filter(Boolean).join(' | ');
+    const ghichu = [mota, dp].filter(Boolean).join(' | '); // cột Ghi chú: mô tả + "Không có dự phòng"; nơi đặt đã có ở cột Tủ
     const key = [ten, pn, ghichu].join('|');
     if (have.has(key)) continue; // chạy lại nhiều lần cũng không bị trùng
     have.add(key);
@@ -47,4 +48,17 @@ function doiNhomCu() {
   let k = 0;
   r.setValues(r.getValues().map(([x]) => { if (x === NGUON) { k++; return [NHOM]; } return [x]; }));
   Logger.log('Đã đổi nhóm ' + k + ' dòng.');
+}
+
+// Chạy 1 lần để làm sạch Ghi chú của các dòng đã nhập trước đó: bỏ đoạn "Nơi đặt: ..." (đã có ở cột Tủ).
+function lamSachGhiChu() {
+  const s = SS().getSheetByName('equip'), n = s.getLastRow();
+  if (n < 2) return;
+  const col = H.equip.split(',').indexOf('ghichu') + 1, r = s.getRange(2, col, n - 1, 1);
+  let k = 0;
+  r.setValues(r.getValues().map(([x]) => {
+    const y = String(x).split(' | ').filter(t => t && !t.startsWith('Nơi đặt:')).join(' | ');
+    if (y !== x) k++; return [y];
+  }));
+  Logger.log('Đã làm sạch ' + k + ' dòng.');
 }
