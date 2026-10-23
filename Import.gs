@@ -21,15 +21,16 @@ function nhapThietBi() {
   });
   const dst = SS().getSheetByName('equip'), h = H.equip.split(',');
   const bo = g => String(g || '').split(' | ').filter(x => x && !x.startsWith('Nơi đặt:')).join(' | ');
-  const have = new Set(rd('equip').map(x => [x.ten, x.pn, bo(x.ghichu)].join('|')));
+  const kh = (tu, ten, pn, sn, g) => [tu, ten, pn, sn, g].map(x => String(x || '').trim()).join('|');
+  const have = new Map(); // khóa -> số dòng giống hệt đã có trong sheet equip
+  rd('equip').forEach(x => { const k = kh(x.tu, x.ten, x.pn, x.sn, bo(x.ghichu)); have.set(k, (have.get(k) || 0) + 1); });
   const out = [];
   for (let i = DONG_TD; i < v.length; i++) {
     const [, ten, pn, sn, , noi, dp, mota] = v[i].map(x => String(x).trim());
     if (!ten) continue;
     const ghichu = [mota, dp].filter(Boolean).join(' | '); // cột Ghi chú: mô tả + "Không có dự phòng"; nơi đặt đã có ở cột Tủ
-    const key = [ten, pn, ghichu].join('|');
-    if (have.has(key)) continue; // chạy lại nhiều lần cũng không bị trùng
-    have.add(key);
+    const key = kh(TU, ten, pn, sn, ghichu);
+    if (have.get(key) > 0) { have.set(key, have.get(key) - 1); continue; } // dòng đã nhập rồi: bỏ qua, chạy lại không bị trùng
     out.push({ id: nid(), ten, sl: 1, nhom: NHOM, tu: TU, tt: 'Tốt', sn, pn, anh: '', ghichu,
                capnhat: today(), nguoi: 'Nhập từ sheet gốc' });
   }

@@ -43,6 +43,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .seg button:hover{color:var(--text)}.seg button.on{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.14)}
 .seg i{width:8px;height:8px;border-radius:50%;flex-shrink:0}.seg button span{font-size:11px;font-weight:700;opacity:.65}
 .gc{min-width:200px;max-width:320px;white-space:pre-wrap}
+.fr2{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.gm{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--blue);cursor:pointer}.gm input{accent-color:var(--blue)}
+.gh td{background:var(--blue-light);border-top:2px solid var(--blue);padding:9px 10px;cursor:pointer}.gh:hover td{background:#dde7f5}
+.gl{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.gl b{font-size:13px;color:var(--blue)}.tg{width:12px;font-size:10px;color:var(--blue)}.gh .bd{background:var(--blue);color:#fff}
+.gi td{background:#fafcff}.gi td:first-child{box-shadow:inset 4px 0 0 var(--blue)}
 .tw{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto;box-shadow:var(--shadow);margin-bottom:14px}
 table{width:100%;border-collapse:collapse;min-width:680px}th{background:var(--blue);color:#fff;text-align:center;padding:8px 10px;font-size:12px;white-space:nowrap}
 td{padding:8px 10px;border-top:1px solid var(--border);vertical-align:top}.mu{color:var(--muted);font-size:12px}.c{text-align:center}
@@ -81,7 +85,7 @@ const $=id=>document.getElementById(id),E=s=>String(s??'').replace(/[&<>"]/g,c=>
 const ST=['Tốt','Cảnh báo','Hư hỏng','Đang sửa chữa'],COL={'Tốt':'#1e7e4f','Cảnh báo':'#b36200','Hư hỏng':'#c0392b','Đang sửa chữa':'#1a56b8'};
 const SYS=['Hệ thống PSR/MSSR Easat EA29190','Hệ thống VCCS','Hệ thống VHF','Hệ thống RAPS','Hệ thống KVM','Hệ thống Radar thời tiết WRS400','Hệ thống ATM'];
 const CAB={'Hệ thống PSR/MSSR Easat EA29190':['Tủ ACU','Tủ PTC','Tủ RSCC','Tủ MSSR','Tủ COMMS','Tủ Radar Distribution','Tủ Transponder']};
-let C='';
+let C='',GM=true,GK=[];const CG=new Set();
 const MENU=[['equip','Khối thiết bị'],['spare','Vật tư dự phòng'],['fail','Hư hỏng'],['swap','Thay thế vật tư dự phòng']];
 let TK='',U={},D={equip:[],spare:[],fail:[],cfg:[],swap:[]},V='',F='all',G='',S='',Y=new Date().getFullYear();
 const adm=()=>U.role==='quantri',today=()=>new Date().toISOString().slice(0,10);
@@ -129,7 +133,7 @@ function render(){$('menu').innerHTML=SYS.map((g,i)=>{const o=OP.has(g);return `
 function fbar(t){const cb=CAB[G],base=D[t].filter(x=>x.nhom===G),cur=base.filter(x=>!C||x.tu===C);
  const tabs=cb?`<div class="tabs">${['',...cb].map((c,i)=>`<button class="${C===c?'on':''}" onclick="C=${i?`CAB[G][${i-1}]`:`''`};render()">${i?E(c):'Tất cả tủ'}<span class="bd">${base.filter(x=>!c||x.tu===c).length}</span></button>`).join('')}</div>`:'';
  const seg=['all',...ST].map(x=>`<button class="${F===x?'on':''}" onclick="F='${x}';render()">${x==='all'?'':`<i style="background:${COL[x]}"></i>`}${x==='all'?'Tất cả':x}<span>${x==='all'?cur.length:cur.filter(y=>y.tt===x).length}</span></button>`).join('');
- return `<div class="fbar">${tabs}<div class="frow"><div class="seg">${seg}</div><div class="mu" id="cnt"></div></div></div>`}
+ return `<div class="fbar">${tabs}<div class="frow"><div class="seg">${seg}</div><div class="fr2"><label class="gm"><input type="checkbox" ${GM?'checked':''} onchange="GM=this.checked;rows()"> Gom thiết bị cùng tên</label><span class="mu" id="cnt"></span></div></div></div>`}
 function listV(t){const cb=CAB[G];
  return head((t==='equip'?'Khối thiết bị':'Vật tư dự phòng')+' - '+E(G)+(C?' - '+E(C):''),`<input placeholder="Tìm theo tên, Serial Number, Part Number..." value="${E(S)}" oninput="S=this.value;rows()">
  ${adm()?`<button class="btn" onclick="ed('${t}')">+ Thêm</button>`:''}`)+
@@ -137,11 +141,21 @@ function listV(t){const cb=CAB[G];
  <div class="tw"><table><thead><tr><th>Ảnh</th><th>Tên</th><th>Số lượng</th><th>${cb?'Tủ':'Nhóm hệ thống'}</th><th>Tình trạng</th><th>Serial Number</th><th>Part Number</th><th>${t==='equip'?'Số lần hư hỏng':'Cấu hình'}</th><th>Ghi chú</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>`}
 function rows(){const t=V,q=S.toLowerCase(),a=D[t].filter(x=>(F==='all'||x.tt===F)&&x.nhom===G&&(!C||x.tu===C)&&[x.ten,x.sn,x.pn,x.nhom].join(' ').toLowerCase().includes(q));
  $('cnt').textContent='Hiển thị '+a.length+' mục';
- $('tb').innerHTML=a.map(x=>`<tr><td>${imgs(x.anh,x.anhtem)}</td><td><b>${E(x.ten)}</b><div class="mu">Cập nhật ${E(x.capnhat)} - ${E(x.nguoi)}</div></td>
+ const R=(x,c)=>`<tr class="${c||''}"><td>${imgs(x.anh,x.anhtem)}</td><td><b>${E(x.ten)}</b><div class="mu">Cập nhật ${E(x.capnhat)} - ${E(x.nguoi)}</div></td>
  <td class="c">${E(x.sl)}</td><td>${E(CAB[G]?x.tu:x.nhom)}</td><td class="c">${chip(x.tt)}</td><td>${E(x.sn)}</td><td>${E(x.pn)}</td>
  <td>${t==='equip'?`<div class="c"><b>${D.fail.filter(f=>f.equipId==x.id).length}</b></div>`:`${E(x.cauhinh)}<div><a href="#" onclick="hist('${x.id}');return false">Lịch sử</a></div>`}</td>
  <td class="gc">${E(x.ghichu)}</td>
- <td>${adm()?`<button class="btn btn-o btn-s" onclick="ed('${t}','${x.id}')">Sửa</button> <button class="btn btn-d btn-s" onclick="del('${t}','${x.id}')">Xóa</button>`:''}</td></tr>`).join('')||'<tr><td colspan="10" class="mu">Không có dữ liệu.</td></tr>'}
+ <td>${adm()?`<button class="btn btn-o btn-s" onclick="ed('${t}','${x.id}')">Sửa</button> <button class="btn btn-d btn-s" onclick="del('${t}','${x.id}')">Xóa</button>`:''}</td></tr>`;
+ let h='';
+ if(!GM)h=a.map(x=>R(x)).join('');
+ else{const g=new Map();a.forEach(x=>{const k=[x.tu,String(x.ten).trim().toLowerCase()].join('|');if(!g.has(k))g.set(k,[]);g.get(k).push(x)});GK=[];
+  g.forEach((m,k)=>{if(m.length<2){h+=R(m[0]);return}
+   const i=GK.push(k)-1,cl=CG.has(k),pn=[...new Set(m.map(x=>String(x.pn||'').trim()))].filter(Boolean),sl=m.reduce((n,x)=>n+(+x.sl||0),0),
+   sts=ST.map(z=>[z,m.filter(x=>x.tt===z).length]).filter(z=>z[1]).map(([z,n])=>`<span class="st" style="color:${COL[z]}">${z}: ${n}</span>`).join(' ');
+   h+=`<tr class="gh" onclick="tgG(${i})"><td colspan="10"><div class="gl"><span class="tg">${cl?'▶':'▼'}</span><b>${E(m[0].ten)}</b><span class="bd">${m.length} thiết bị</span><span class="mu">Tổng số lượng: ${sl}</span>${sts}<span class="mu">${pn.length>1?pn.length+' Part Number khác nhau':pn.length?'Part Number: '+E(pn[0]):''}</span></div></td></tr>`;
+   if(!cl)h+=m.map(x=>R(x,'gi')).join('')})}
+ $('tb').innerHTML=h||'<tr><td colspan="10" class="mu">Không có dữ liệu.</td></tr>'}
+const tgG=i=>{const k=GK[i];CG.has(k)?CG.delete(k):CG.add(k);rows()};
 
 const inG=id=>G==='all'||((D.equip.find(x=>x.id==id)||{}).nhom)===G;
 function failV(){const ys=[...new Set([Y,...D.fail.map(f=>+String(f.ngay).slice(0,4)).filter(Boolean)])].sort(),m=[...Array(12).keys()],
