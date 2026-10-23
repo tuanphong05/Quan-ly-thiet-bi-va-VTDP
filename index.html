@@ -18,12 +18,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .bn{font-size:15px;font-weight:800}.bs{font-size:11px;opacity:.8}
 .clk{margin-left:auto;text-align:right;line-height:1.4}.clk div:first-child{font-size:12px;opacity:.85}.clk div:last-child{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
 .shell{display:flex;flex:1;min-height:0}
-.nav{width:226px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column}
+.nav{width:226px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
 .nu{padding:14px;border-bottom:1px solid var(--border);text-align:center;font-size:12.5px;font-weight:700;color:var(--blue);line-height:1.35}
 .nu small{display:block;font-size:10.5px;font-weight:400;color:var(--muted);text-transform:uppercase;margin-top:5px}
 .na{padding:10px 14px 14px;border-bottom:1px solid var(--border)}
 .ml{padding:10px}.mi{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius);cursor:pointer;font-size:12.5px;font-weight:600;margin-bottom:2px;border-left:3px solid transparent}
 .mi:hover,.mi.on{background:var(--blue-light)}.mi.on{border-left-color:var(--blue);color:var(--blue)}
+.ms{padding:7px 10px;font-size:12px;font-weight:500}
 .nh{margin-top:auto;padding:12px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);text-align:center}
 .main{flex:1;min-width:0;overflow:auto}.pg{padding:16px 20px}
 .ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.ph h2{font-size:17px;color:var(--blue);margin-right:auto}
@@ -65,6 +66,7 @@ td{padding:8px 10px;border-top:1px solid var(--border);vertical-align:top}.mu{co
 const API='https://script.google.com/macros/s/AKfycbxFyMV07upxQXxrmRsLF3IAsJYtQsoiujhb7UIK_8eCDDGDHC7vjzcRdF53mvYtDpU/exec';
 const $=id=>document.getElementById(id),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ST=['Tốt','Cảnh báo','Hư hỏng','Đang sửa chữa'],COL={'Tốt':'#1e7e4f','Cảnh báo':'#b36200','Hư hỏng':'#c0392b','Đang sửa chữa':'#1a56b8'};
+const SYS=['Hệ thống PSR/MSSR Easat EA29190','Hệ thống VCCS','Hệ thống VHF','Hệ thống RAPS','Hệ thống KVM','Hệ thống Radar thời tiết WRS400','Hệ thống ATM'];
 const MENU=[['equip','Khối thiết bị'],['spare','Vật tư dự phòng'],['fail','Hư hỏng'],['swap','Thay thế VTDP']];
 let TK='',U={},D={equip:[],spare:[],fail:[],cfg:[],swap:[]},V='equip',F='all',G='all',S='',Y=new Date().getFullYear();
 const adm=()=>U.role==='quantri',today=()=>new Date().toISOString().slice(0,10);
@@ -88,23 +90,24 @@ spare:[['ten','Tên vật tư dự phòng'],['sl','Số lượng','number'],['nh
 function fld([k,l,t],o){const v=o[k]??'';let i;
  if(t==='ta')i=`<textarea id="f_${k}" rows="3">${E(v)}</textarea>`;
  else if(t==='sel')i=`<select id="f_${k}">${ST.map(s=>`<option ${s==v?'selected':''}>${s}</option>`).join('')}</select>`;
- else if(t==='dl')i=`<input id="f_${k}" list="dl" value="${E(v)}">`;
+ else if(t==='dl')i=`<select id="f_${k}"><option value="">-- Chọn hệ thống --</option>${[...SYS,...(v&&!SYS.includes(v)?[v]:[])].map(s=>`<option ${s==v?'selected':''}>${E(s)}</option>`).join('')}</select>`;
  else if(t==='img')i=`${v?imgs(v):''}<input type="file" id="f_${k}" accept="image/*">`;
  else i=`<input id="f_${k}" type="${t||'text'}" value="${E(v)}">`;return `<label>${l}</label>${i}`}
-function ed(t,id){const o=id?D[t].find(x=>x.id==id):{tt:'Tốt',sl:1},nh=[...new Set([...D.equip,...D.spare].map(x=>x.nhom).filter(Boolean))];
- mdl((id?'Sửa ':'Thêm ')+(t==='equip'?'khối thiết bị':'vật tư dự phòng'),`<datalist id="dl">${nh.map(x=>`<option value="${E(x)}">`).join('')}</datalist>`+FD[t].map(f=>fld(f,o)).join(''),async()=>{
+function ed(t,id){const o=id?D[t].find(x=>x.id==id):{tt:'Tốt',sl:1,nhom:G==='all'?'':G};
+ mdl((id?'Sửa ':'Thêm ')+(t==='equip'?'khối thiết bị':'vật tư dự phòng'),FD[t].map(f=>fld(f,o)).join(''),async()=>{
  const r={...o};for(const [k,,ty] of FD[t]){const el=$('f_'+k);if(ty==='img'){if(el.files[0])r[k]=await up(el.files[0])}else r[k]=el.value}
- if(!r.ten)throw new Error('Vui lòng nhập tên');D=await api('save',{t,row:r});render();toast('Đã lưu');return true})}
+ if(!r.ten)throw new Error('Vui lòng nhập tên');if(!r.nhom)throw new Error('Vui lòng chọn hệ thống');D=await api('save',{t,row:r});render();toast('Đã lưu');return true})}
 async function del(t,id){if(!confirm('Xóa bản ghi này?'))return;try{D=await api('del',{t,id});render();toast('Đã xóa')}catch(e){toast(e.message,1)}}
 function hist(id){const h=D.cfg.filter(x=>x.spareId==id).sort((a,b)=>b.ngay>a.ngay?1:-1);
  mdl('Lịch sử cấu hình - '+nmS(id),h.map(x=>`<div class="rs"><b>${E(x.ngay)}</b> - ${E(x.nguoi)}<br>${E(x.noidung)}</div>`).join('')||'<div class="mu">Chưa có lịch sử.</div>')}
 
 function head(title,extra){return `<div class="ph"><h2>${title}</h2>${extra||''}</div>`}
-function render(){$('menu').innerHTML=MENU.map(([k,l])=>`<div class="mi ${V===k?'on':''}" onclick="V='${k}';F='all';G='all';S='';render()">${l}</div>`).join('');
+const pickG=i=>{G=i?SYS[i-1]:'all';render()};
+function render(){const lv=V==='equip'||V==='spare';$('menu').innerHTML=MENU.map(([k,l])=>`<div class="mi ${V===k?'on':''}" onclick="V='${k}';F='all';S='';render()">${l}</div>`).join('')+`<div class="mu" style="padding:14px 10px 4px;font-weight:700">HỆ THỐNG</div>`+['all',...SYS].map((s,i)=>`<div class="mi ms ${G===s?'on':''}" onclick="pickG(${i})">${i?E(s):'Tất cả hệ thống'}</div>`).join('');
  $('main').innerHTML=`<div class="pg">${V==='equip'||V==='spare'?listV(V):V==='fail'?failV():swapV()}</div>`;if(V==='equip'||V==='spare')rows()}
-function listV(t){const gs=[...new Set(D[t].map(x=>x.nhom).filter(Boolean))].sort();
- return head(t==='equip'?'Khối thiết bị':'Vật tư dự phòng',`<input placeholder="Tìm tên, S/N, P/N..." value="${E(S)}" oninput="S=this.value;rows()">
- <select onchange="G=this.value;rows()"><option value="all">Tất cả nhóm hệ thống</option>${gs.map(g=>`<option ${g==G?'selected':''}>${E(g)}</option>`).join('')}</select>
+function listV(t){const gs=[...SYS,...new Set(D[t].map(x=>x.nhom).filter(x=>x&&!SYS.includes(x)))];
+ return head((t==='equip'?'Khối thiết bị':'Vật tư dự phòng')+(G==='all'?'':' - '+E(G)),`<input placeholder="Tìm tên, S/N, P/N..." value="${E(S)}" oninput="S=this.value;rows()">
+ <select onchange="G=this.value;render()"><option value="all">Tất cả nhóm hệ thống</option>${gs.map(g=>`<option ${g==G?'selected':''}>${E(g)}</option>`).join('')}</select>
  ${adm()?`<button class="btn" onclick="ed('${t}')">+ Thêm</button>`:''}`)+
  `<div class="ch">${['all',...ST].map(s=>`<button class="${F===s?'on':''}" onclick="F='${s}';render()">${s==='all'?'Tất cả':s}</button>`).join('')}</div>
  <div class="tw"><table><thead><tr><th>Ảnh</th><th>Tên</th><th>SL</th><th>Nhóm hệ thống</th><th>Tình trạng</th><th>S/N</th><th>P/N</th><th>${t==='equip'?'Số lần hư hỏng':'Cấu hình'}</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>`}
@@ -114,18 +117,19 @@ function rows(){const t=V,q=S.toLowerCase(),a=D[t].filter(x=>(F==='all'||x.tt===
  <td>${t==='equip'?`<div class="c"><b>${D.fail.filter(f=>f.equipId==x.id).length}</b></div>`:`${E(x.cauhinh)}<div><a href="#" onclick="hist('${x.id}');return false">Lịch sử</a></div>`}</td>
  <td>${adm()?`<button class="btn btn-o btn-s" onclick="ed('${t}','${x.id}')">Sửa</button> <button class="btn btn-d btn-s" onclick="del('${t}','${x.id}')">Xóa</button>`:''}</td></tr>`).join('')||'<tr><td colspan="9" class="mu">Không có dữ liệu.</td></tr>'}
 
+const inG=id=>G==='all'||((D.equip.find(x=>x.id==id)||{}).nhom)===G;
 function failV(){const ys=[...new Set([Y,...D.fail.map(f=>+String(f.ngay).slice(0,4)).filter(Boolean)])].sort(),m=[...Array(12).keys()],
- st=D.equip.map(e=>{const c=m.map(i=>D.fail.filter(f=>f.equipId==e.id&&String(f.ngay).startsWith(Y+'-'+String(i+1).padStart(2,'0'))).length);return{e,c,n:c.reduce((a,b)=>a+b,0)}}).filter(r=>r.n);
- return head('Theo dõi hư hỏng',`<select onchange="Y=+this.value;render()">${ys.map(y=>`<option ${y==Y?'selected':''}>${y}</option>`).join('')}</select>${adm()?'<button class="btn" onclick="addFail()">+ Ghi nhận hư hỏng</button>':''}`)+
+ st=D.equip.filter(e=>G==='all'||e.nhom===G).map(e=>{const c=m.map(i=>D.fail.filter(f=>f.equipId==e.id&&String(f.ngay).startsWith(Y+'-'+String(i+1).padStart(2,'0'))).length);return{e,c,n:c.reduce((a,b)=>a+b,0)}}).filter(r=>r.n);
+ return head('Theo dõi hư hỏng'+(G==='all'?'':' - '+E(G)),`<select onchange="Y=+this.value;render()">${ys.map(y=>`<option ${y==Y?'selected':''}>${y}</option>`).join('')}</select>${adm()?'<button class="btn" onclick="addFail()">+ Ghi nhận hư hỏng</button>':''}`)+
  `<div class="tw"><table><thead><tr><th>Thống kê ${Y}</th>${m.map(i=>`<th>T${i+1}</th>`).join('')}<th>Cả năm</th></tr></thead><tbody>${st.map(r=>`<tr><td>${E(r.e.ten)}</td>${r.c.map(v=>`<td class="c">${v||''}</td>`).join('')}<td class="c"><b>${r.n}</b></td></tr>`).join('')||'<tr><td colspan="14" class="mu">Chưa có hư hỏng trong năm này.</td></tr>'}</tbody></table></div>
- <div class="tw"><table><thead><tr><th>Ngày</th><th>Khối thiết bị</th><th>Mô tả</th><th>Nguyên nhân</th><th>Khắc phục</th><th>Người ghi</th><th></th></tr></thead><tbody>${[...D.fail].sort((a,b)=>b.ngay>a.ngay?1:-1).map(f=>`<tr><td>${E(f.ngay)}</td><td><b>${E(nmE(f.equipId))}</b></td><td>${E(f.mota)}</td><td>${E(f.nguyennhan)}</td><td>${E(f.khacphuc)}</td><td>${E(f.nguoi)}</td><td>${adm()?`<button class="btn btn-d btn-s" onclick="del('fail','${f.id}')">Xóa</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="mu">Chưa có bản ghi.</td></tr>'}</tbody></table></div>`}
-const opt=(a,k)=>a.map(x=>`<option value="${x.id}">${E(x.ten)}${x.sn?' - '+E(x.sn):''}</option>`).join('');
+ <div class="tw"><table><thead><tr><th>Ngày</th><th>Khối thiết bị</th><th>Mô tả</th><th>Nguyên nhân</th><th>Khắc phục</th><th>Người ghi</th><th></th></tr></thead><tbody>${D.fail.filter(f=>inG(f.equipId)).sort((a,b)=>b.ngay>a.ngay?1:-1).map(f=>`<tr><td>${E(f.ngay)}</td><td><b>${E(nmE(f.equipId))}</b></td><td>${E(f.mota)}</td><td>${E(f.nguyennhan)}</td><td>${E(f.khacphuc)}</td><td>${E(f.nguoi)}</td><td>${adm()?`<button class="btn btn-d btn-s" onclick="del('fail','${f.id}')">Xóa</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="mu">Chưa có bản ghi.</td></tr>'}</tbody></table></div>`}
+const opt=(a,k)=>a.map(x=>`<option value="${x.id}">${E(x.ten)}${x.nhom?' ('+E(x.nhom)+')':''}${x.sn?' - '+E(x.sn):''}</option>`).join('');
 function addFail(){mdl('Ghi nhận hư hỏng',`<label>Khối thiết bị</label><select id="x1">${opt(D.equip)}</select><label>Ngày</label><input type="date" id="x2" value="${today()}"><label>Mô tả hư hỏng</label><textarea id="x3" rows="2"></textarea><label>Nguyên nhân</label><input id="x4"><label>Cách khắc phục</label><input id="x5">`,async()=>{
  if(!$('x1').value||!$('x3').value)throw new Error('Chọn khối thiết bị và nhập mô tả');
  D=await api('save',{t:'fail',row:{equipId:$('x1').value,ngay:$('x2').value,mota:$('x3').value,nguyennhan:$('x4').value,khacphuc:$('x5').value}});render();toast('Đã ghi nhận');return true})}
 
-function swapV(){return head('Thay thế bằng vật tư dự phòng',adm()?'<button class="btn" onclick="addSwap()">+ Ghi nhận thay thế</button>':'')+
- `<div class="tw"><table><thead><tr><th>Ngày</th><th>Người thay</th><th>Khối thiết bị bị thay</th><th>VTDP sử dụng</th><th>SL</th><th>Ghi chú</th></tr></thead><tbody>${[...D.swap].sort((a,b)=>b.ngay>a.ngay?1:-1).map(s=>`<tr><td>${E(s.ngay)}</td><td>${E(s.nguoi)}</td><td>${E(nmE(s.equipId))}</td><td>${E(nmS(s.spareId))}</td><td class="c">${E(s.sl)}</td><td>${E(s.ghichu)}</td></tr>`).join('')||'<tr><td colspan="6" class="mu">Chưa có bản ghi.</td></tr>'}</tbody></table></div>`}
+function swapV(){return head('Thay thế bằng vật tư dự phòng'+(G==='all'?'':' - '+E(G)),adm()?'<button class="btn" onclick="addSwap()">+ Ghi nhận thay thế</button>':'')+
+ `<div class="tw"><table><thead><tr><th>Ngày</th><th>Người thay</th><th>Khối thiết bị bị thay</th><th>VTDP sử dụng</th><th>SL</th><th>Ghi chú</th></tr></thead><tbody>${D.swap.filter(s=>inG(s.equipId)).sort((a,b)=>b.ngay>a.ngay?1:-1).map(s=>`<tr><td>${E(s.ngay)}</td><td>${E(s.nguoi)}</td><td>${E(nmE(s.equipId))}</td><td>${E(nmS(s.spareId))}</td><td class="c">${E(s.sl)}</td><td>${E(s.ghichu)}</td></tr>`).join('')||'<tr><td colspan="6" class="mu">Chưa có bản ghi.</td></tr>'}</tbody></table></div>`}
 function addSwap(){mdl('Ghi nhận thay thế',`<label>Khối thiết bị bị thay</label><select id="x1">${opt(D.equip)}</select><label>Vật tư dự phòng sử dụng</label><select id="x2">${opt(D.spare.filter(s=>+s.sl>0))}</select><label>Số lượng</label><input type="number" id="x3" value="1" min="1"><label>Ghi chú</label><input id="x4">`,async()=>{
  if(!$('x1').value||!$('x2').value)throw new Error('Chọn khối thiết bị và vật tư dự phòng');
  D=await api('swap',{row:{equipId:$('x1').value,spareId:$('x2').value,sl:$('x3').value,ghichu:$('x4').value}});render();toast('Đã ghi nhận, số lượng VTDP đã cập nhật');return true})}
