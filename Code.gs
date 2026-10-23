@@ -3,8 +3,8 @@
 // (Execute as: Me, Who has access: Anyone).
 const FOLDER_ID = 'DAN_ID_THU_MUC_DRIVE_LUU_ANH';
 const H = {
-  equip: 'id,ten,sl,nhom,tt,sn,pn,anh,ghichu,capnhat,nguoi',
-  spare: 'id,ten,sl,nhom,tt,sn,pn,anh,anhtem,cauhinh,capnhat,nguoi',
+  equip: 'id,ten,sl,nhom,tt,sn,pn,anh,ghichu,capnhat,nguoi,tu',
+  spare: 'id,ten,sl,nhom,tt,sn,pn,anh,anhtem,cauhinh,capnhat,nguoi,tu',
   fail: 'id,equipId,ngay,mota,nguyennhan,khacphuc,nguoi',
   cfg: 'id,spareId,ngay,nguoi,noidung',
   swap: 'id,ngay,nguoi,equipId,spareId,sl,ghichu',
@@ -84,4 +84,19 @@ function doPost(e) {
     }
   } catch (err) { r = { err: err.message }; }
   return ContentService.createTextOutput(JSON.stringify(r)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// Chạy 1 LẦN sau khi dán code mới (dành cho sheet đã có dữ liệu): thêm cột "tu" (tủ thiết bị)
+// vào sheet equip và spare, gán các dòng cũ của hệ thống PSR/MSSR Easat EA29190 vào "Tủ ACU".
+function nangCap() {
+  const HT = 'Hệ thống PSR/MSSR Easat EA29190', TU_CU = 'Tủ ACU';
+  ['equip', 'spare'].forEach(k => {
+    const s = SS().getSheetByName(k), h = s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0];
+    if (h.indexOf('tu') < 0) { s.getRange(1, h.length + 1).setValue('tu').setFontWeight('bold'); h.push('tu'); }
+    const n = s.getLastRow(); if (n < 2) return;
+    const cN = h.indexOf('nhom') + 1, cT = h.indexOf('tu') + 1;
+    const nh = s.getRange(2, cN, n - 1, 1).getValues(), r = s.getRange(2, cT, n - 1, 1), tu = r.getValues();
+    r.setNumberFormat('@').setValues(tu.map((x, i) => [x[0] || (nh[i][0] === HT ? TU_CU : '')]));
+  });
+  Logger.log('Đã nâng cấp xong.');
 }
