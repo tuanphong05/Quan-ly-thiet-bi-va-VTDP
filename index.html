@@ -36,8 +36,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .ll{width:84px;height:84px;margin-bottom:10px}
 #zoom{position:fixed;z-index:60;display:none;pointer-events:none;background:#fff;padding:4px;border-radius:10px;box-shadow:0 10px 36px rgba(0,0,0,.35)}
 #zoom img{display:block;max-width:420px;max-height:420px;border-radius:6px}
-#lb{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;cursor:zoom-out}
-#lb img{max-width:92vw;max-height:92vh;border-radius:8px;background:#fff}
+#lbx{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+#lbx img{max-width:92vw;max-height:92vh;border-radius:8px;background:#fff}
 .th{transition:transform .12s;cursor:zoom-in}.th:hover{transform:scale(1.06)}
 .fbar{background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
 .tabs{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--border);background:#fafbfd;overflow-x:auto}
@@ -87,7 +87,7 @@ td{padding:8px 10px;border-top:1px solid var(--border);vertical-align:top}.mu{co
 <div class="r"><button class="btn btn-o" onclick="cm()">Đóng</button><button class="btn" id="ok">Lưu</button></div></div></div>
 <div class="toast" id="toast"></div>
 <div id="zoom"><img alt=""></div>
-<div id="lb" class="hidden" onclick="this.classList.add('hidden')"><img id="lbi" alt=""></div>
+<div id="lbx" class="hidden" onclick="this.classList.add('hidden')"><img id="lbi" alt=""></div>
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbxFyMV07upxQXxrmRsLF3IAsJYtQsoiujhb7UIK_8eCDDGDHC7vjzcRdF53mvYtDpU/exec';
@@ -114,7 +114,7 @@ const up=f=>new Promise((res,rej)=>{const im=new Image();im.onerror=()=>rej(new 
 const chip=t=>`<span class="st" style="color:${COL[t]||'#666'}">${E(t)}</span>`;
 const imgs=(...ids)=>ids.filter(Boolean).map(i=>`<img class="th" data-id="${i}" src="${th(i)}">`).join('');
 const dw=(id,w)=>`https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
-const Z=$('zoom'),zi=Z.querySelector('img'),lb=$('lb');let LE=null,CUR='';
+const Z=$('zoom'),zi=Z.querySelector('img'),lb=$('lbx');let LE=null,CUR='';
 function zpos(e){const r=Z.getBoundingClientRect();let x=e.clientX+18,y=e.clientY+18;if(x+r.width>innerWidth-8)x=e.clientX-r.width-18;if(x<8)x=8;if(y+r.height>innerHeight-8)y=innerHeight-r.height-8;if(y<8)y=8;Z.style.left=x+'px';Z.style.top=y+'px'}
 const isT=e=>e.target.classList&&e.target.classList.contains('th');
 document.addEventListener('mouseover',e=>{if(!isT(e))return;LE=e;CUR=e.target.dataset.id;zi.src=th(CUR);Z.style.display='block';zpos(e);
