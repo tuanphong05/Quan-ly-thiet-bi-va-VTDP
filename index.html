@@ -34,6 +34,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .ch{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.ch button{border:1px solid var(--border);background:#fff;border-radius:99px;padding:4px 12px}.ch .on{border-color:var(--blue);color:var(--blue);font-weight:700}
 .lg{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.35)}
 .ll{width:84px;height:84px;margin-bottom:10px}
+#zoom{position:fixed;z-index:60;display:none;pointer-events:none;background:#fff;padding:4px;border-radius:10px;box-shadow:0 10px 36px rgba(0,0,0,.35)}
+#zoom img{display:block;max-width:420px;max-height:420px;border-radius:6px}
+#lb{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+#lb img{max-width:92vw;max-height:92vh;border-radius:8px;background:#fff}
+.th{transition:transform .12s;cursor:zoom-in}.th:hover{transform:scale(1.06)}
 .fbar{background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
 .tabs{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--border);background:#fafbfd;overflow-x:auto}
 .tabs button{display:flex;align-items:center;gap:8px;padding:12px 14px 10px;border:0;border-bottom:3px solid transparent;background:none;color:var(--muted);font-size:12.5px;font-weight:600;white-space:nowrap;transition:.15s}
@@ -81,6 +86,8 @@ td{padding:8px 10px;border-top:1px solid var(--border);vertical-align:top}.mu{co
 <div class="mo hidden" id="mo"><div class="mb"><h3 id="mt"></h3><div id="mbody"></div><div id="er"></div>
 <div class="r"><button class="btn btn-o" onclick="cm()">Đóng</button><button class="btn" id="ok">Lưu</button></div></div></div>
 <div class="toast" id="toast"></div>
+<div id="zoom"><img alt=""></div>
+<div id="lb" class="hidden" onclick="this.classList.add('hidden')"><img id="lbi" alt=""></div>
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbxFyMV07upxQXxrmRsLF3IAsJYtQsoiujhb7UIK_8eCDDGDHC7vjzcRdF53mvYtDpU/exec';
@@ -92,7 +99,7 @@ let C='',GM=true,GK=[];const CG=new Set();
 const MENU=[['equip','Khối thiết bị'],['spare','Vật tư dự phòng'],['fail','Hư hỏng'],['swap','Thay thế vật tư dự phòng']];
 let TK='',U={},D={equip:[],spare:[],fail:[],cfg:[],swap:[]},V='',F='all',G='',S='',Y=new Date().getFullYear();
 const adm=()=>U.role==='quantri',today=()=>new Date().toISOString().slice(0,10);
-const th=id=>`https://drive.google.com/thumbnail?id=${id}&sz=w300`,big=id=>`https://drive.google.com/file/d/${id}/view`;
+const th=id=>`https://drive.google.com/thumbnail?id=${id}&sz=w300`;
 const nmE=id=>(D.equip.find(x=>x.id==id)||{}).ten||id,nmS=id=>(D.spare.find(x=>x.id==id)||{}).ten||id;
 let tt;function toast(m,er){const t=$('toast');t.textContent=m;t.className='toast'+(er?' er':'');clearTimeout(tt);tt=setTimeout(()=>t.textContent='',2800)}
 async function api(a,p={}){const r=await fetch(API,{method:'POST',body:JSON.stringify({a,tk:TK,...p})}),j=await r.json();if(j.err)throw new Error(j.err);return j}
@@ -105,7 +112,17 @@ const cm=()=>$('mo').classList.add('hidden');
 const up=f=>new Promise((res,rej)=>{const im=new Image();im.onerror=()=>rej(new Error('Không đọc được ảnh'));im.onload=async()=>{const s=Math.min(1,1280/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
  try{res((await api('up',{b64:c.toDataURL('image/jpeg',.8).split(',')[1]})).id)}catch(e){rej(e)}};im.src=URL.createObjectURL(f)});
 const chip=t=>`<span class="st" style="color:${COL[t]||'#666'}">${E(t)}</span>`;
-const imgs=(...ids)=>ids.filter(Boolean).map(i=>`<a href="${big(i)}" target="_blank"><img class="th" src="${th(i)}"></a>`).join('');
+const imgs=(...ids)=>ids.filter(Boolean).map(i=>`<img class="th" data-id="${i}" src="${th(i)}">`).join('');
+const dw=(id,w)=>`https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
+const Z=$('zoom'),zi=Z.querySelector('img'),lb=$('lb');let LE=null,CUR='';
+function zpos(e){const r=Z.getBoundingClientRect();let x=e.clientX+18,y=e.clientY+18;if(x+r.width>innerWidth-8)x=e.clientX-r.width-18;if(x<8)x=8;if(y+r.height>innerHeight-8)y=innerHeight-r.height-8;if(y<8)y=8;Z.style.left=x+'px';Z.style.top=y+'px'}
+const isT=e=>e.target.classList&&e.target.classList.contains('th');
+document.addEventListener('mouseover',e=>{if(!isT(e))return;LE=e;CUR=e.target.dataset.id;zi.src=th(CUR);Z.style.display='block';zpos(e);
+ const m=new Image(),id=CUR;m.onload=()=>{if(CUR===id&&Z.style.display==='block'){zi.src=m.src;zpos(LE)}};m.src=dw(id,800)});
+document.addEventListener('mousemove',e=>{if(Z.style.display==='block'){LE=e;zpos(e)}});
+document.addEventListener('mouseout',e=>{if(isT(e)){Z.style.display='none';CUR=''}});
+document.addEventListener('click',e=>{if(!isT(e))return;Z.style.display='none';CUR='';$('lbi').src=dw(e.target.dataset.id,1600);lb.classList.remove('hidden')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.add('hidden')});
 
 const FD={equip:[['ten','Tên khối thiết bị'],['sl','Số lượng','number'],['nhom','Thuộc nhóm hệ thống','dl'],['tu','Tủ thiết bị','tu'],['tt','Tình trạng hoạt động','sel'],['sn','Serial number'],['pn','Part number'],['ghichu','Ghi chú','ta'],['anh','Ảnh thiết bị','img']],
 spare:[['ten','Tên vật tư dự phòng'],['sl','Số lượng','number'],['nhom','Thuộc nhóm hệ thống','dl'],['tu','Tủ thiết bị','tu'],['tt','Tình trạng','sel'],['sn','Serial number'],['pn','Part number'],['cauhinh','Tình trạng cấu hình (VD: đã cài ghost của RHP2)','ta'],['ghichu','Ghi chú','ta'],['anh','Ảnh vật tư','img'],['anhtem','Ảnh tem quản lý vật tư dự phòng','img']]};
