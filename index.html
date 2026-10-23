@@ -24,7 +24,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .na{padding:10px 14px 14px;border-bottom:1px solid var(--border)}
 .ml{padding:10px}.mi{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius);cursor:pointer;font-size:12.5px;font-weight:600;margin-bottom:2px;border-left:3px solid transparent}
 .mi:hover,.mi.on{background:var(--blue-light)}.mi.on{border-left-color:var(--blue);color:var(--blue)}
-.ms{padding:7px 10px;font-size:12px;font-weight:500}
+.ms{padding:9px 10px;font-size:12.5px;font-weight:600;gap:6px}.ms.gr{color:var(--blue);background:var(--blue-light)}
+.sb{padding:7px 10px 7px 30px;font-size:12px;font-weight:500}.ms span{width:12px;flex-shrink:0;font-size:10px}
 .nh{margin-top:auto;padding:12px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);text-align:center}
 .main{flex:1;min-width:0;overflow:auto}.pg{padding:16px 20px}
 .ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.ph h2{font-size:17px;color:var(--blue);margin-right:auto}
@@ -102,8 +103,10 @@ function hist(id){const h=D.cfg.filter(x=>x.spareId==id).sort((a,b)=>b.ngay>a.ng
  mdl('Lịch sử cấu hình - '+nmS(id),h.map(x=>`<div class="rs"><b>${E(x.ngay)}</b> - ${E(x.nguoi)}<br>${E(x.noidung)}</div>`).join('')||'<div class="mu">Chưa có lịch sử.</div>')}
 
 function head(title,extra){return `<div class="ph"><h2>${title}</h2>${extra||''}</div>`}
-const pickG=i=>{G=i?SYS[i-1]:'all';render()};
-function render(){const lv=V==='equip'||V==='spare';$('menu').innerHTML=MENU.map(([k,l])=>`<div class="mi ${V===k?'on':''}" onclick="V='${k}';F='all';S='';render()">${l}</div>`).join('')+`<div class="mu" style="padding:14px 10px 4px;font-weight:700">HỆ THỐNG</div>`+['all',...SYS].map((s,i)=>`<div class="mi ms ${G===s?'on':''}" onclick="pickG(${i})">${i?E(s):'Tất cả hệ thống'}</div>`).join('');
+const OP=new Set(['all']);
+const tg=i=>{const g=i?SYS[i-1]:'all';if(OP.has(g))OP.delete(g);else{OP.add(g);G=g}render()};
+const go=(i,k)=>{G=i?SYS[i-1]:'all';V=k;F='all';S='';OP.add(G);render()};
+function render(){$('menu').innerHTML=['all',...SYS].map((g,i)=>{const o=OP.has(g);return `<div class="mi ms ${G===g?'gr':''}" onclick="tg(${i})"><span>${o?'▼':'▶'}</span>${i?E(g):'Tất cả hệ thống'}</div>`+(o?MENU.map(([k,l])=>`<div class="mi sb ${G===g&&V===k?'on':''}" onclick="go(${i},'${k}')">${l}</div>`).join(''):'')}).join('');
  $('main').innerHTML=`<div class="pg">${V==='equip'||V==='spare'?listV(V):V==='fail'?failV():swapV()}</div>`;if(V==='equip'||V==='spare')rows()}
 function listV(t){const gs=[...SYS,...new Set(D[t].map(x=>x.nhom).filter(x=>x&&!SYS.includes(x)))];
  return head((t==='equip'?'Khối thiết bị':'Vật tư dự phòng')+(G==='all'?'':' - '+E(G)),`<input placeholder="Tìm tên, S/N, P/N..." value="${E(S)}" oninput="S=this.value;rows()">
