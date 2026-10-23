@@ -63,3 +63,47 @@ function lamSachGhiChu() {
   }));
   Logger.log('Đã làm sạch ' + k + ' dòng.');
 }
+
+// =====================================================================
+// NHẬP VẬT TƯ DỰ PHÒNG TỪ SHEET GỐC VÀO WEB (sheet "spare")
+// Cách dùng: sửa khối cấu hình VT bên dưới cho khớp tab cần nhập rồi chạy hàm nhapVatTuDuPhong.
+// COT: điền CHỮ CÁI CỘT trong sheet gốc (A, B, C...). Để '' nếu sheet gốc không có cột đó.
+// =====================================================================
+const VT = {
+  NGUON: 'Spare - Tủ PTC',                     // tên tab chứa bảng vật tư dự phòng
+  DONG_TD: 2,                                  // bỏ qua 2 dòng đầu (tiêu đề cột + dòng gộp "TỦ PTC"); dữ liệu bắt đầu từ dòng 3
+  NHOM: 'Hệ thống PSR/MSSR Easat EA29190',     // phải trùng 1 trong 7 hệ thống trên web
+  TU: 'Tủ PTC',                                // tủ thiết bị ('' nếu hệ thống không chia tủ)
+  COT: { ten: 'B', pn: 'C', sn: 'D', sl: '', tt: '', cauhinh: '', ghichu: 'G' }
+};
+
+function nhapVatTuDuPhong() {
+  const src = SS().getSheetByName(VT.NGUON);
+  if (!src) throw Error('Không tìm thấy sheet "' + VT.NGUON + '"');
+  const rg = src.getDataRange(), v = rg.getValues();
+  rg.getMergedRanges().forEach(m => {  // ô gộp: chép giá trị ra cả vùng gộp
+    const r0 = m.getRow() - 1, c0 = m.getColumn() - 1, val = v[r0][c0];
+    for (let i = 0; i < m.getNumRows(); i++)
+      for (let j = 0; j < m.getNumColumns(); j++) v[r0 + i][c0 + j] = val;
+  });
+  const ci = l => l ? l.toUpperCase().charCodeAt(0) - 65 : -1;
+  const lay = (row, k) => { const i = ci(VT.COT[k]); return i < 0 ? '' : String(row[i] ?? '').trim(); };
+  const TT = ['Tốt', 'Cảnh báo', 'Hư hỏng', 'Đang sửa chữa'];
+  const kh = (tu, ten, pn, sn, g) => [tu, ten, pn, sn, g].map(x => String(x || '').trim()).join('|');
+  const dst = SS().getSheetByName('spare'), h = H.spare.split(',');
+  const have = new Map();
+  rd('spare').forEach(x => { const k = kh(x.tu, x.ten, x.pn, x.sn, x.ghichu); have.set(k, (have.get(k) || 0) + 1); });
+  const out = [];
+  for (let i = VT.DONG_TD; i < v.length; i++) {
+    const ten = lay(v[i], 'ten'); if (!ten) continue;
+    const pn = lay(v[i], 'pn'), sn = lay(v[i], 'sn'), ghichu = lay(v[i], 'ghichu'), cauhinh = lay(v[i], 'cauhinh');
+    const sl = parseInt(lay(v[i], 'sl'), 10), tt = lay(v[i], 'tt');
+    const key = kh(VT.TU, ten, pn, sn, ghichu);
+    if (have.get(key) > 0) { have.set(key, have.get(key) - 1); continue; }
+    out.push({ id: nid(), ten, sl: isNaN(sl) ? 1 : sl, nhom: VT.NHOM, tu: VT.TU, tt: TT.indexOf(tt) >= 0 ? tt : 'Tốt',
+               sn, pn, anh: '', anhtem: '', cauhinh, ghichu, capnhat: today(), nguoi: 'Nhập từ sheet gốc' });
+  }
+  if (!out.length) { Logger.log('Không có dòng mới để nhập.'); return; }
+  dst.getRange(dst.getLastRow() + 1, 1, out.length, h.length).setValues(out.map(o => h.map(c => o[c] ?? '')));
+  Logger.log('Đã nhập ' + out.length + ' dòng vào sheet spare.');
+}

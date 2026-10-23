@@ -139,7 +139,9 @@ function listV(t){const cb=CAB[G];
  ${adm()?`<button class="btn" onclick="ed('${t}')">+ Thêm</button>`:''}`)+
  fbar(t)+`
  <div class="tw"><table><thead><tr><th>Ảnh</th><th>Tên</th><th>Số lượng</th><th>${cb?'Tủ':'Nhóm hệ thống'}</th><th>Tình trạng</th><th>Serial Number</th><th>Part Number</th><th>${t==='equip'?'Số lần hư hỏng':'Cấu hình'}</th><th>Ghi chú</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>`}
-function rows(){const t=V,q=S.toLowerCase(),a=D[t].filter(x=>(F==='all'||x.tt===F)&&x.nhom===G&&(!C||x.tu===C)&&[x.ten,x.sn,x.pn,x.nhom].join(' ').toLowerCase().includes(q));
+const cp=(a,b)=>String(a||'').trim().localeCompare(String(b||'').trim(),'vi',{numeric:true,sensitivity:'base'});
+const cmpX=(a,b)=>cp(a.ten,b.ten)||cp(a.tu,b.tu)||cp(a.pn,b.pn)||cp(a.sn,b.sn);
+function rows(){const t=V,q=S.toLowerCase(),a=D[t].filter(x=>(F==='all'||x.tt===F)&&x.nhom===G&&(!C||x.tu===C)&&[x.ten,x.sn,x.pn,x.nhom].join(' ').toLowerCase().includes(q)).sort(cmpX);
  $('cnt').textContent='Hiển thị '+a.length+' mục';
  const R=(x,c)=>`<tr class="${c||''}"><td>${imgs(x.anh,x.anhtem)}</td><td><b>${E(x.ten)}</b><div class="mu">Cập nhật ${E(x.capnhat)} - ${E(x.nguoi)}</div></td>
  <td class="c">${E(x.sl)}</td><td>${E(CAB[G]?x.tu:x.nhom)}</td><td class="c">${chip(x.tt)}</td><td>${E(x.sn)}</td><td>${E(x.pn)}</td>
