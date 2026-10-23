@@ -69,7 +69,7 @@ const $=id=>document.getElementById(id),E=s=>String(s??'').replace(/[&<>"]/g,c=>
 const ST=['Tốt','Cảnh báo','Hư hỏng','Đang sửa chữa'],COL={'Tốt':'#1e7e4f','Cảnh báo':'#b36200','Hư hỏng':'#c0392b','Đang sửa chữa':'#1a56b8'};
 const SYS=['Hệ thống PSR/MSSR Easat EA29190','Hệ thống VCCS','Hệ thống VHF','Hệ thống RAPS','Hệ thống KVM','Hệ thống Radar thời tiết WRS400','Hệ thống ATM'];
 const MENU=[['equip','Khối thiết bị'],['spare','Vật tư dự phòng'],['fail','Hư hỏng'],['swap','Thay thế VTDP']];
-let TK='',U={},D={equip:[],spare:[],fail:[],cfg:[],swap:[]},V='equip',F='all',G='all',S='',Y=new Date().getFullYear();
+let TK='',U={},D={equip:[],spare:[],fail:[],cfg:[],swap:[]},V='',F='all',G='',S='',Y=new Date().getFullYear();
 const adm=()=>U.role==='quantri',today=()=>new Date().toISOString().slice(0,10);
 const th=id=>`https://drive.google.com/thumbnail?id=${id}&sz=w300`,big=id=>`https://drive.google.com/file/d/${id}/view`;
 const nmE=id=>(D.equip.find(x=>x.id==id)||{}).ten||id,nmS=id=>(D.spare.find(x=>x.id==id)||{}).ten||id;
@@ -103,10 +103,11 @@ function hist(id){const h=D.cfg.filter(x=>x.spareId==id).sort((a,b)=>b.ngay>a.ng
  mdl('Lịch sử cấu hình - '+nmS(id),h.map(x=>`<div class="rs"><b>${E(x.ngay)}</b> - ${E(x.nguoi)}<br>${E(x.noidung)}</div>`).join('')||'<div class="mu">Chưa có lịch sử.</div>')}
 
 function head(title,extra){return `<div class="ph"><h2>${title}</h2>${extra||''}</div>`}
-const OP=new Set(['all']);
-const tg=i=>{const g=i?SYS[i-1]:'all';if(OP.has(g))OP.delete(g);else{OP.add(g);G=g}render()};
-const go=(i,k)=>{G=i?SYS[i-1]:'all';V=k;F='all';S='';OP.add(G);render()};
-function render(){$('menu').innerHTML=['all',...SYS].map((g,i)=>{const o=OP.has(g);return `<div class="mi ms ${G===g?'gr':''}" onclick="tg(${i})"><span>${o?'▼':'▶'}</span>${i?E(g):'Tất cả hệ thống'}</div>`+(o?MENU.map(([k,l])=>`<div class="mi sb ${G===g&&V===k?'on':''}" onclick="go(${i},'${k}')">${l}</div>`).join(''):'')}).join('');
+const OP=new Set();
+const tg=i=>{const g=SYS[i];if(OP.has(g)){OP.delete(g);if(G===g){G='';V=''}}else OP.add(g);render()};
+const go=(i,k)=>{G=SYS[i];V=k;F='all';S='';OP.add(G);render()};
+function render(){$('menu').innerHTML=SYS.map((g,i)=>{const o=OP.has(g);return `<div class="mi ms ${G===g?'gr':''}" onclick="tg(${i})"><span>${o?'▼':'▶'}</span>${E(g)}</div>`+(o?MENU.map(([k,l])=>`<div class="mi sb ${G===g&&V===k?'on':''}" onclick="go(${i},'${k}')">${l}</div>`).join(''):'')}).join('');
+ if(!V||!G){$('main').innerHTML='<div class="pg"><div class="mu" style="padding:60px 10px;text-align:center;font-size:14px">Chọn một hệ thống ở menu bên trái, sau đó chọn Khối thiết bị, Vật tư dự phòng, Hư hỏng hoặc Thay thế VTDP để xem dữ liệu.</div></div>';return}
  $('main').innerHTML=`<div class="pg">${V==='equip'||V==='spare'?listV(V):V==='fail'?failV():swapV()}</div>`;if(V==='equip'||V==='spare')rows()}
 function listV(t){const gs=[...SYS,...new Set(D[t].map(x=>x.nhom).filter(x=>x&&!SYS.includes(x)))];
  return head((t==='equip'?'Khối thiết bị':'Vật tư dự phòng')+(G==='all'?'':' - '+E(G)),`<input placeholder="Tìm tên, S/N, P/N..." value="${E(S)}" oninput="S=this.value;rows()">
