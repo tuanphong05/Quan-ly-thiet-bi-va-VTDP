@@ -126,13 +126,13 @@ function hist(id){const h=D.cfg.filter(x=>x.spareId==id).sort((a,b)=>b.ngay>a.ng
 function head(title,extra){return `<div class="ph"><h2>${title}</h2>${extra||''}</div>`}
 const OP=new Set();
 const tg=i=>{const g=SYS[i];if(OP.has(g)){OP.delete(g);if(G===g){G='';V='';C=''}}else OP.add(g);render()};
-const go=(i,k)=>{if(G!==SYS[i])C='';G=SYS[i];V=k;F='all';S='';OP.add(G);render()};
+const go=(i,k)=>{if(G!==SYS[i])C=(CAB[SYS[i]]||[])[0]||'';G=SYS[i];V=k;F='all';S='';OP.add(G);render()};
 function render(){$('menu').innerHTML=SYS.map((g,i)=>{const o=OP.has(g);return `<div class="mi ms ${G===g?'gr':''}" onclick="tg(${i})"><span>${o?'▼':'▶'}</span>${E(g)}</div>`+(o?MENU.map(([k,l])=>`<div class="mi sb ${G===g&&V===k?'on':''}" onclick="go(${i},'${k}')">${l}</div>`).join(''):'')}).join('');
  if(!V||!G){$('main').innerHTML='<div class="pg"><div class="mu" style="padding:60px 10px;text-align:center;font-size:14px">Chọn một hệ thống ở menu bên trái, sau đó chọn Khối thiết bị, Vật tư dự phòng, Hư hỏng hoặc Thay thế vật tư dự phòng để xem dữ liệu.</div></div>';return}
  $('main').innerHTML=`<div class="pg">${V==='equip'||V==='spare'?listV(V):V==='fail'?failV():swapV()}</div>`;if(V==='equip'||V==='spare')rows()}
 function fbar(t){const cb=CAB[G],base=D[t].filter(x=>x.nhom===G),cur=base.filter(x=>!C||x.tu===C);
- const tabs=cb?`<div class="tabs">${['',...cb].map((c,i)=>`<button class="${C===c?'on':''}" onclick="C=${i?`CAB[G][${i-1}]`:`''`};render()">${i?E(c):'Tất cả tủ'}<span class="bd">${base.filter(x=>!c||x.tu===c).length}</span></button>`).join('')}</div>`:'';
- const seg=['all',...ST].map(x=>`<button class="${F===x?'on':''}" onclick="F='${x}';render()">${x==='all'?'':`<i style="background:${COL[x]}"></i>`}${x==='all'?'Tất cả':x}<span>${x==='all'?cur.length:cur.filter(y=>y.tt===x).length}</span></button>`).join('');
+ const tabs=cb?`<div class="tabs">${cb.map((c,i)=>`<button class="${C===c?'on':''}" onclick="C=CAB[G][${i}];render()">${E(c)}<span class="bd">${base.filter(x=>x.tu===c).length}</span></button>`).join('')}</div>`:'';
+ const seg=ST.map(x=>`<button class="${F===x?'on':''}" onclick="F=F==='${x}'?'all':'${x}';render()"><i style="background:${COL[x]}"></i>${x}<span>${cur.filter(y=>y.tt===x).length}</span></button>`).join('');
  return `<div class="fbar">${tabs}<div class="frow"><div class="seg">${seg}</div><div class="fr2"><label class="gm"><input type="checkbox" ${GM?'checked':''} onchange="GM=this.checked;rows()"> Gom thiết bị cùng tên</label><span class="mu" id="cnt"></span></div></div></div>`}
 function listV(t){const cb=CAB[G];
  return head((t==='equip'?'Khối thiết bị':'Vật tư dự phòng')+' - '+E(G)+(C?' - '+E(C):''),`<input placeholder="Tìm theo tên, Serial Number, Part Number..." value="${E(S)}" oninput="S=this.value;rows()">
