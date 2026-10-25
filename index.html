@@ -125,10 +125,11 @@ const API='https://script.google.com/macros/s/AKfycbxFyMV07upxQXxrmRsLF3IAsJYtQs
 const $=id=>document.getElementById(id),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ST=['Tốt','Cảnh báo','Hư hỏng','Đang sửa chữa'],COL={'Tốt':'#1e7e4f','Cảnh báo':'#b36200','Hư hỏng':'#c0392b','Đang sửa chữa':'#1a56b8'};
 const SYS=['Hệ thống PSR/MSSR','Hệ thống VCCS','Hệ thống VHF','Hệ thống RAPS','Hệ thống KVM','Hệ thống Radar thời tiết WRS400','Hệ thống ATM'];
-const CAB0={'Hệ thống PSR/MSSR':['Phân hệ Anten','Tủ điều khiển Anten','Tủ máy phát sơ cấp','Tủ máy thu sơ cấp','Tủ MSSR','Tủ truyền dẫn tín hiệu','Tủ Test Transponder']};
+const CAB0={'Hệ thống PSR/MSSR':['Phân hệ Anten','Tủ điều khiển Anten','Tủ máy phát sơ cấp','Tủ máy thu sơ cấp','Tủ thu-phát thứ cấp','Tủ truyền dẫn tín hiệu','Tủ Test Transponder','Tủ PSR-MSSR (Phòng trực kỹ thuật ATCT)']};
 const TB=g=>{const b=CAB0[g];if(!b)return null;const ex=[...new Set([...D.equip,...D.spare].filter(x=>x.nhom===g&&x.tu&&!b.includes(x.tu)).map(x=>x.tu))].sort((p,q)=>String(p).localeCompare(String(q),'vi'));return[...b,...ex]};
 const CAB=new Proxy({},{get:(_,g)=>TB(g)});
 let C='',GM=true,GK=[];const CG=new Set();
+const DEF_DD={'Tủ PSR-MSSR (Phòng trực kỹ thuật ATCT)':'Phòng trực kỹ thuật ATCT'};
 const TS=['Đang sử dụng','Dự phòng','Ngừng sử dụng'],DEF_DV='Trung tâm KSKL Long Thành';
 const MAU=[['stt','Số thứ tự'],['loai','Loại vật tư'],['tenkt','Tên kỹ thuật'],['ten','Tên sử dụng'],['sl','Đơn vị tính/Số lượng'],['sn','Serial Number'],['pn','Part Number'],['hang','Hãng sản xuất'],['xuatxu','Xuất xứ'],['nam','Năm sản xuất'],['hethong','Hệ thống'],['tinhtrang','Tình trạng vật tư'],['nhomtb','Phân nhóm thiết bị'],['diadiem','Địa điểm'],['donvi','Đơn vị quản lý'],['taisan','Tài sản vật tư dự phòng'],['nguyengia','Nguyên giá'],['ghichu','Thông tin bổ sung']];
 const nm=x=>x.ten||x.tenkt||x.loai||'',slN=v=>parseFloat(String(v??'').replace(',','.'))||0;
@@ -174,7 +175,7 @@ function fld([k,l,t],o){const v=o[k]??'';let i;
  else if(t==='dl')i=`<select id="f_${k}" onchange="rt()"><option value="">-- Chọn hệ thống --</option>${[...SYS,...(v&&!SYS.includes(v)?[v]:[])].map(s=>`<option ${s==v?'selected':''}>${E(s)}</option>`).join('')}</select>`;
  else if(t==='img')i=`${v?imgs(v):''}<input type="file" id="f_${k}" accept="image/*">`;
  else i=`<input id="f_${k}" type="${t||'text'}" value="${E(v)}">`;return `<div class="fc ${t==='ta2'||t==='img'?'s2':''}"><label>${l}</label>${i}</div>`}
-function ed(t,id){const o=id?D[t].find(x=>x.id==id):{tt:'Tốt',sl:'1',nhom:G,tu:C,donvi:DEF_DV,tinhtrang:t==='spare'?'Dự phòng':'Đang sử dụng'};
+function ed(t,id){const o=id?D[t].find(x=>x.id==id):{tt:'Tốt',sl:'1',nhom:G,tu:C,donvi:DEF_DV,diadiem:DEF_DD[C]||'',tinhtrang:t==='spare'?'Dự phòng':'Đang sử dụng'};
  mdl((id?'Sửa ':'Thêm ')+(t==='equip'?'khối thiết bị':'vật tư dự phòng'),'<div class="fg">'+FD(t).map(f=>fld(f,o)).join('')+'</div>',async()=>{
  const r={...o};for(const [k,,ty] of FD(t)){const el=$('f_'+k);if(ty==='img'){if(el.files[0])r[k]=await up(el.files[0])}else r[k]=el.value}
  if(!r.ten)throw new Error('Vui lòng nhập Tên sử dụng');if(!r.nhom)throw new Error('Vui lòng chọn hệ thống');if(CAB[r.nhom]&&!r.tu)throw new Error('Vui lòng chọn tủ thiết bị');D=await api('save',{t,row:r});render();toast('Đã lưu');return true},true)}
