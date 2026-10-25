@@ -124,8 +124,8 @@ body.nvo .nav{transform:none}body.nvo .ov{display:block;position:fixed;inset:56p
 const API='https://script.google.com/macros/s/AKfycbxFyMV07upxQXxrmRsLF3IAsJYtQsoiujhb7UIK_8eCDDGDHC7vjzcRdF53mvYtDpU/exec';
 const $=id=>document.getElementById(id),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ST=['Tốt','Cảnh báo','Hư hỏng','Đang sửa chữa'],COL={'Tốt':'#1e7e4f','Cảnh báo':'#b36200','Hư hỏng':'#c0392b','Đang sửa chữa':'#1a56b8'};
-const SYS=['Hệ thống PSR/MSSR Easat EA29190','Hệ thống VCCS','Hệ thống VHF','Hệ thống RAPS','Hệ thống KVM','Hệ thống Radar thời tiết WRS400','Hệ thống ATM'];
-const CAB={'Hệ thống PSR/MSSR Easat EA29190':['Phân hệ Anten','Tủ điều khiển Anten','Tủ máy phát sơ cấp','Tủ RSCC','Tủ MSSR','Tủ COMMS','Tủ Radar Distribution','Tủ Transponder']};
+const SYS=['Hệ thống PSR/MSSR','Hệ thống VCCS','Hệ thống VHF','Hệ thống RAPS','Hệ thống KVM','Hệ thống Radar thời tiết WRS400','Hệ thống ATM'];
+const CAB={'Hệ thống PSR/MSSR':['Phân hệ Anten','Tủ điều khiển Anten','Tủ máy phát sơ cấp','Tủ RSCC','Tủ MSSR','Tủ COMMS','Tủ Radar Distribution','Tủ Transponder']};
 let C='',GM=true,GK=[];const CG=new Set();
 const TS=['Đang sử dụng','Dự phòng','Ngừng sử dụng'],DEF_DV='Trung tâm KSKL Long Thành';
 const MAU=[['stt','Số thứ tự'],['loai','Loại vật tư'],['tenkt','Tên kỹ thuật'],['ten','Tên sử dụng'],['sl','Đơn vị tính/Số lượng'],['sn','Serial Number'],['pn','Part Number'],['hang','Hãng sản xuất'],['xuatxu','Xuất xứ'],['nam','Năm sản xuất'],['hethong','Hệ thống'],['tinhtrang','Tình trạng vật tư'],['nhomtb','Phân nhóm thiết bị'],['diadiem','Địa điểm'],['donvi','Đơn vị quản lý'],['taisan','Tài sản vật tư dự phòng'],['nguyengia','Nguyên giá'],['ghichu','Thông tin bổ sung']];

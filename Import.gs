@@ -11,7 +11,7 @@
 const NHAP = {
   NGUON: 'Phân hệ anten',                    // tên tab chứa bảng theo mẫu
   DICH: 'equip',                             // 'equip' = Khối thiết bị | 'spare' = Vật tư dự phòng
-  NHOM: 'Hệ thống PSR/MSSR Easat EA29190',   // phải trùng đúng 1 trong 7 hệ thống trên web
+  NHOM: 'Hệ thống PSR/MSSR',   // phải trùng đúng 1 trong 7 hệ thống trên web
   TU: '',  // để trống = lấy tên phân hệ ghi trong sheet; điền tên để ép tất cả vào một tab
   TU_CU: 'Tủ ACU'                               // chỉ dùng cho hàm thayTheTu: tên tủ cũ cần thay thế
 };

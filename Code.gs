@@ -129,3 +129,17 @@ function chuyenMau() {
   });
   Logger.log('Đã chuyển sang mẫu mới.');
 }
+
+// Chạy 1 LẦN khi đổi tên một nhóm hệ thống: đổi giá trị cột nhom trong các sheet equip và spare.
+// Sửa 2 dòng dưới rồi chạy. Mặc định: "Hệ thống PSR/MSSR Easat EA29190" -> "Hệ thống PSR/MSSR".
+function doiTenNhom() {
+  const CU = 'Hệ thống PSR/MSSR Easat EA29190', MOI = 'Hệ thống PSR/MSSR';
+  let n = 0;
+  ['equip', 'spare'].forEach(k => {
+    const s = SS().getSheetByName(k), h = hdr(k), r = s.getLastRow();
+    if (r < 2) return;
+    const g = s.getRange(2, h.indexOf('nhom') + 1, r - 1, 1), v = g.getValues();
+    g.setValues(v.map(x => { if (String(x[0]).trim() === CU) { n++; return [MOI]; } return x; }));
+  });
+  Logger.log('Đã đổi tên nhóm hệ thống cho ' + n + ' dòng.');
+}
