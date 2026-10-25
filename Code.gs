@@ -15,6 +15,7 @@ const H = {
   equip: 'id,ten,sl,nhom,tt,sn,pn,anh,ghichu,capnhat,nguoi,tu,' + MAU,
   spare: 'id,ten,sl,nhom,tt,sn,pn,anh,anhtem,cauhinh,capnhat,nguoi,tu,ghichu,' + MAU,
   fail: 'id,equipId,ngay,mota,nguyennhan,khacphuc,nguoi',
+  log: 'id,equipId,ngay,loai,noidung,thuchien,ketqua,tiep,nguoi,capnhat',   // nhật ký bảo trì, bảo dưỡng của từng thiết bị
   cfg: 'id,spareId,ngay,nguoi,noidung',
   swap: 'id,ngay,nguoi,equipId,spareId,sl,ghichu',
   users: 'user,pass,role,ten'
@@ -47,6 +48,7 @@ function setup() {
   if (u.getLastRow() < 2) u.appendRow(['admin', '123456', 'quantri', 'Quản trị']); // role: quantri | xem
 }
 function rd(k) {
+  if (!SS().getSheetByName(k)) hdr(k);   // sheet mới (VD log) tự được tạo
   const v = SS().getSheetByName(k).getDataRange().getValues(), h = v.shift();
   return v.filter(r => r[0] !== '').map(r => Object.fromEntries(h.map((c, i) =>
     [c, r[i] instanceof Date ? Utilities.formatDate(r[i], 'GMT+7', 'yyyy-MM-dd') : r[i]])));
@@ -63,7 +65,7 @@ function rm(k, id) {
   const i = ids.indexOf(String(id));
   if (i >= 0) s.deleteRow(i + 2);
 }
-const all = () => ({ equip: rd('equip'), spare: rd('spare'), fail: rd('fail'), cfg: rd('cfg'), swap: rd('swap') });
+const all = () => ({ equip: rd('equip'), spare: rd('spare'), fail: rd('fail'), log: rd('log'), cfg: rd('cfg'), swap: rd('swap') });
 const soLuong = v => parseFloat(String(v ?? '').replace(',', '.')) || 0;   // "2 bộ" -> 2
 
 function doPost(e) {
