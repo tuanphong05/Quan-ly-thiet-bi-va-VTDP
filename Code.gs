@@ -143,3 +143,15 @@ function doiTenNhom() {
   });
   Logger.log('Đã đổi tên nhóm hệ thống cho ' + n + ' dòng.');
 }
+
+// Chạy 1 LẦN: đổi số thứ tự dạng "5,1" thành "5.1" trong sheet equip và spare.
+function chuanHoaSTT() {
+  let n = 0;
+  ['equip', 'spare'].forEach(k => {
+    const s = SS().getSheetByName(k), h = hdr(k), r = s.getLastRow();
+    if (r < 2) return;
+    const g = s.getRange(2, h.indexOf('stt') + 1, r - 1, 1), v = g.getDisplayValues();
+    g.setNumberFormat('@').setValues(v.map(x => { const t = String(x[0]).replace(/,/g, '.'); if (t !== x[0]) n++; return [t]; }));
+  });
+  Logger.log('Đã đổi dạng số thứ tự cho ' + n + ' dòng.');
+}

@@ -64,7 +64,7 @@ function docMau() {
     const ten = get(i, 'ten') || get(i, 'tenkt') || get(i, 'loai');
     if (!ten) continue;
     const o = {
-      stt: get(i, 'stt'), loai: get(i, 'loai'), tenkt: get(i, 'tenkt'), ten,
+      stt: get(i, 'stt').replace(/,/g, '.'), loai: get(i, 'loai'), tenkt: get(i, 'tenkt'), ten,
       sl: get(i, 'sl') || '1', sn: get(i, 'sn'), pn: get(i, 'pn'), hang: get(i, 'hang'), xuatxu: get(i, 'xuatxu'),
       nam: get(i, 'nam'), hethong: get(i, 'hethong'),
       tinhtrang: get(i, 'tinhtrang') || (NHAP.DICH === 'spare' ? 'Dự phòng' : 'Đang sử dụng'),
@@ -147,4 +147,15 @@ function xoaTu() {
       if (v[i][ci] === NHAP.TU_CU && v[i][ni] === NHAP.NHOM) { dst.deleteRow(i + 1); n++; }
   });
   Logger.log('Đã xóa ' + n + ' dòng của "' + NHAP.TU_CU + '" (có sao lưu trước khi xóa).');
+}
+
+// KIỂM TRA: ghi vào nhật ký số dòng của từng (nhóm hệ thống | tủ) trong sheet equip và spare.
+// Dùng khi nhập xong mà web không hiện dữ liệu: so tên ở đây với tên tab trên web.
+function kiemTra() {
+  ['equip', 'spare'].forEach(k => {
+    const c = {};
+    rd(k).forEach(x => { const t = '[' + x.nhom + ']  [' + x.tu + ']'; c[t] = (c[t] || 0) + 1; });
+    Logger.log(k + ': ' + (Object.keys(c).length ? '' : '(trống)'));
+    Object.keys(c).sort().forEach(t => Logger.log('   ' + t + ' = ' + c[t] + ' dòng'));
+  });
 }
