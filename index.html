@@ -57,6 +57,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .gi td{background:#fafcff}.gi td:first-child{box-shadow:inset 4px 0 0 var(--blue)}
 .tw{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto;box-shadow:var(--shadow);margin-bottom:14px}
 .twb{max-height:calc(100vh - 150px);overflow:auto}.twb thead th{position:sticky;top:0;z-index:3}.twb thead th.stk{z-index:4}
+.fz{position:sticky}td.fz{background:#fff;z-index:2}.twb thead th.fz{z-index:5}.fz.e{box-shadow:2px 0 0 var(--border)}
 table.big{width:max-content;min-width:100%}table.big td{font-size:12.5px;vertical-align:top}.stk{position:sticky;right:0;background:#fff;box-shadow:-2px 0 0 var(--border)}th.stk{background:var(--blue)}
 .gh .gl{position:sticky;left:12px;width:max-content;max-width:90vw}.mb.wide{width:760px}.fg{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}.fc{display:flex;flex-direction:column;gap:3px}.fc.s2{grid-column:1/-1}
 @media(max-width:640px){.fg{grid-template-columns:1fr}}
@@ -164,13 +165,14 @@ function fbar(t){const cb=CAB[G],base=D[t].filter(x=>x.nhom===G),cur=base.filter
  const tabs=cb?`<div class="tabs">${cb.map((c,i)=>`<button class="${C===c?'on':''}" onclick="C=CAB[G][${i}];render()">${E(c)}<span class="bd">${base.filter(x=>x.tu===c).length}</span></button>`).join('')}</div>`:'';
  const seg=ST.map(x=>`<button class="${F===x?'on':''}" onclick="F=F==='${x}'?'all':'${x}';render()"><i style="background:${COL[x]}"></i>${x}<span>${cur.filter(y=>y.tt===x).length}</span></button>`).join('');
  return `<div class="fbar">${tabs}<div class="frow"><div class="seg">${seg}</div><div class="fr2"><span class="mu" id="cnt"></span></div></div></div>`}
-const CW={stt:80,loai:150,tenkt:190,ten:190,sl:90,sn:120,pn:120,hang:110,xuatxu:90,nam:80,hethong:150,tinhtrang:120,nhomtb:110,diadiem:130,donvi:170,taisan:130,nguyengia:100,ghichu:200};
-const cols=t=>[...MAU.map(([k,l])=>({k,l,w:CW[k]})),{k:'tt',l:'Tình trạng hoạt động',w:130},t==='equip'?{k:'hh',l:'Số lần hư hỏng',w:90}:{k:'cauhinh',l:'Tình trạng cấu hình',w:180},{k:'cn',l:'Cập nhật',w:130},{k:'act',l:'Thao tác',w:120}].filter(c=>c.k!=='act'||adm());
+const FZ={stt:[0,80],ten:[80,200]},zs=k=>FZ[k]?`left:${FZ[k][0]}px;min-width:${FZ[k][1]}px;width:${FZ[k][1]}px;max-width:${FZ[k][1]}px;`:'',zc=k=>FZ[k]?(k==='ten'?'fz e':'fz'):'';
+const CW={stt:80,loai:150,tenkt:190,ten:200,sl:90,sn:120,pn:120,hang:110,xuatxu:90,nam:80,hethong:150,tinhtrang:120,nhomtb:110,diadiem:130,donvi:170,taisan:130,nguyengia:100,ghichu:200};
+const cols=t=>[...[MAU[0],MAU.find(m=>m[0]==='ten'),...MAU.filter(m=>m[0]!=='stt'&&m[0]!=='ten')].map(([k,l])=>({k,l,w:CW[k]})),{k:'tt',l:'Tình trạng hoạt động',w:130},t==='equip'?{k:'hh',l:'Số lần hư hỏng',w:90}:{k:'cauhinh',l:'Tình trạng cấu hình',w:180},{k:'cn',l:'Cập nhật',w:130},{k:'act',l:'Thao tác',w:120}].filter(c=>c.k!=='act'||adm());
 function listV(t){
  return head((t==='equip'?'Khối thiết bị':'Vật tư dự phòng')+' - '+E(G)+(C?' - '+E(C):''),`<input placeholder="Tìm theo tên, Serial Number, Part Number, hãng sản xuất..." value="${E(S)}" oninput="S=this.value;rows()">
  ${adm()?`<button class="btn" onclick="ed('${t}')">+ Thêm</button>`:''}`)+
  fbar(t)+`
- <div class="tw twb"><table class="big"><thead><tr>${cols(t).map(c=>`<th style="min-width:${c.w}px"${c.k==='act'?' class="stk"':''}>${c.l}</th>`).join('')}</tr></thead><tbody id="tb"></tbody></table></div>`}
+ <div class="tw twb"><table class="big"><thead><tr>${cols(t).map(c=>`<th style="min-width:${c.w}px;${zs(c.k)}" class="${c.k==='act'?'stk':zc(c.k)}">${c.l}</th>`).join('')}</tr></thead><tbody id="tb"></tbody></table></div>`}
 const cp=(a,b)=>String(a||'').trim().localeCompare(String(b||'').trim(),'vi',{numeric:true,sensitivity:'base'});
 const sk=v=>String(v||'').trim().split(/[.,]/).map(n=>parseInt(n)||0);
 const cs0=(a,b)=>{const x=String(a.stt||'').trim(),y=String(b.stt||'').trim();if(!x||!y)return x?-1:y?1:0;const p=sk(x),q=sk(y);for(let i=0;i<Math.max(p.length,q.length);i++){const d=(p[i]||0)-(q[i]||0);if(d)return d}return 0};
@@ -184,7 +186,7 @@ function rows(){const t=V,q=S.toLowerCase(),a=D[t].filter(x=>(F==='all'||x.tt===
  if(a==='cauhinh')return `<td>${E(x.cauhinh)}<div><a href="#" onclick="hist('${x.id}');return false">Lịch sử</a></div></td>`;
  if(a==='cn')return `<td class="mu">${E(x.capnhat)}<br>${E(x.nguoi)}</td>`;
  if(a==='act')return `<td class="stk"><button class="btn btn-o btn-s" onclick="ed('${t}','${x.id}')">Sửa</button> <button class="btn btn-d btn-s" onclick="del('${t}','${x.id}')">Xóa</button></td>`;
- return `<td class="${a==='ten'?'':a==='sl'?'c':''}">${a==='ten'?'<b>'+E(x.ten||nm(x))+'</b>':E(x[a])}</td>`}).join('')}</tr>`;
+ return `<td class="${zc(a)} ${a==='sl'?'c':''}" style="${zs(a)}">${a==='ten'?'<b>'+E(x.ten||nm(x))+'</b>':E(x[a])}</td>`}).join('')}</tr>`;
 let h='';
  h=a.map(x=>R(x)).join('');
  $('tb').innerHTML=h||'<tr><td colspan="'+cs.length+'" class="mu">Không có dữ liệu.</td></tr>'}
