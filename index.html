@@ -56,6 +56,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .gl{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.gl b{font-size:13px;color:var(--blue)}.tg{width:12px;font-size:10px;color:var(--blue)}.gh .bd{background:var(--blue);color:#fff}
 .gi td{background:#fafcff}.gi td:first-child{box-shadow:inset 4px 0 0 var(--blue)}
 .tw{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto;box-shadow:var(--shadow);margin-bottom:14px}
+.twb{max-height:calc(100vh - 150px);overflow:auto}.twb thead th{position:sticky;top:0;z-index:3}.twb thead th.stk{z-index:4}
 table.big{width:max-content;min-width:100%}table.big td{font-size:12.5px;vertical-align:top}.stk{position:sticky;right:0;background:#fff;box-shadow:-2px 0 0 var(--border)}th.stk{background:var(--blue)}
 .gh .gl{position:sticky;left:12px;width:max-content;max-width:90vw}.mb.wide{width:760px}.fg{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}.fc{display:flex;flex-direction:column;gap:3px}.fc.s2{grid-column:1/-1}
 @media(max-width:640px){.fg{grid-template-columns:1fr}}
@@ -169,7 +170,7 @@ function listV(t){
  return head((t==='equip'?'Khối thiết bị':'Vật tư dự phòng')+' - '+E(G)+(C?' - '+E(C):''),`<input placeholder="Tìm theo tên, Serial Number, Part Number, hãng sản xuất..." value="${E(S)}" oninput="S=this.value;rows()">
  ${adm()?`<button class="btn" onclick="ed('${t}')">+ Thêm</button>`:''}`)+
  fbar(t)+`
- <div class="tw"><table class="big"><thead><tr>${cols(t).map(c=>`<th style="min-width:${c.w}px"${c.k==='act'?' class="stk"':''}>${c.l}</th>`).join('')}</tr></thead><tbody id="tb"></tbody></table></div>`}
+ <div class="tw twb"><table class="big"><thead><tr>${cols(t).map(c=>`<th style="min-width:${c.w}px"${c.k==='act'?' class="stk"':''}>${c.l}</th>`).join('')}</tr></thead><tbody id="tb"></tbody></table></div>`}
 const cp=(a,b)=>String(a||'').trim().localeCompare(String(b||'').trim(),'vi',{numeric:true,sensitivity:'base'});
 const sk=v=>String(v||'').trim().split(/[.,]/).map(n=>parseInt(n)||0);
 const cs0=(a,b)=>{const x=String(a.stt||'').trim(),y=String(b.stt||'').trim();if(!x||!y)return x?-1:y?1:0;const p=sk(x),q=sk(y);for(let i=0;i<Math.max(p.length,q.length);i++){const d=(p[i]||0)-(q[i]||0);if(d)return d}return 0};
