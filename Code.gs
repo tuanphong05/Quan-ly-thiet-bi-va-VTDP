@@ -198,6 +198,7 @@ function xuLyNhatKy(o, us) {
     if (o.xong) { o.xacnhan = o.xacnhan || today(); o.xnnguoi = o.xnnguoi || us.ten; }
   } else { o.xacnhan = ''; o.xnnguoi = ''; }
   delete o.xong;
+  if (o.loai !== 'Bảo dưỡng định kỳ') o.tiep = '';   // chỉ bảo dưỡng định kỳ mới có ngày bảo dưỡng tiếp theo
   if (o.xacnhan)
     rd('fail').filter(f => f.equipId == o.equipId && !String(f.khacphuc || '').trim())
       .forEach(f => { f.khacphuc = 'Đã sửa chữa: ' + (o.noidung || ''); f.ngaykp = today(); wr('fail', f); });

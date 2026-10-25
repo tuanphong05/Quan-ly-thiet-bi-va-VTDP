@@ -113,7 +113,7 @@ body.nvo .nav{transform:none}body.nvo .ov{display:block;position:fixed;inset:56p
 <div class="shell">
 <div class="nav"><div class="nu"><span id="un">-</span><small id="ur"></small></div>
 <div class="na"><button class="btn btn-o btn-s" style="width:100%" onclick="location.reload()">Đăng xuất</button></div>
-<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 25/10/2026 18:40</div></div>
+<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 25/10/2026 19:10</div></div>
 <div class="main" id="main"></div></div>
 <div class="mo hidden" id="mo"><div class="mb" id="mbx"><h3 id="mt"></h3><div id="mbody"></div><div id="er"></div>
 <div class="r"><button class="btn btn-o" onclick="cm()">Đóng</button><button class="btn" id="ok">Lưu</button></div></div></div>
@@ -140,7 +140,8 @@ const adm=()=>U.role==='quantri',today=()=>new Date().toISOString().slice(0,10);
 const th=id=>`https://drive.google.com/thumbnail?id=${id}&sz=w300`;
 const nmE=id=>nm(D.equip.find(x=>x.id==id)||{})||id,nmS=id=>nm(D.spare.find(x=>x.id==id)||{})||id;
 let tt;function toast(m,er){const t=$('toast');t.textContent=m;t.className='toast'+(er?' er':'');clearTimeout(tt);tt=setTimeout(()=>t.textContent='',2800)}
-const fxS=o=>['equip','spare'].forEach(k=>(o[k]||[]).forEach(x=>{x.stt=String(x.stt??'').replace(/,/g,'.');if(x.tt==='Hư hỏng')x.tt='Thiết bị đang sự cố'}));   // số thứ tự dạng 5,1 -> 5.1
+const fxS=o=>{(o.log||[]).forEach(l=>{if(l.loai==='Bảo trì')l.loai='Bảo dưỡng định kỳ'});return fxS0(o)};
+const fxS0=o=>['equip','spare'].forEach(k=>(o[k]||[]).forEach(x=>{x.stt=String(x.stt??'').replace(/,/g,'.');if(x.tt==='Hư hỏng')x.tt='Thiết bị đang sự cố'}));   // số thứ tự dạng 5,1 -> 5.1
 async function api(a,p={}){const r=await fetch(API,{method:'POST',body:JSON.stringify({a,tk:TK,...p})}),j=await r.json();if(j.err)throw new Error(j.err);fxS(j.d||j);return j}
 async function dn(){$('le').textContent='';$('lb').disabled=true;try{const j=await api('login',{u:$('lu').value.trim(),p:$('lp').value});TK=j.tk;U=j.us;D=j.d;
  $('login').classList.add('hidden');$('un').textContent=U.ten;$('ur').textContent=adm()?'Quản trị':'Chỉ xem';render()}catch(e){$('le').textContent=e.message}$('lb').disabled=false}
@@ -244,11 +245,11 @@ function addSwap(){mdl('Ghi nhận thay thế',`<label>Khối thiết bị bị 
  D=await api('swap',{row:{equipId:$('x1').value,spareId:$('x2').value,sl:$('x3').value,ghichu:$('x4').value}});render();toast('Đã ghi nhận, số lượng vật tư dự phòng đã cập nhật');return true})}
 
 // ===== NHẬT KÝ BẢO TRÌ, BẢO DƯỠNG =====
-const LNK=['Bảo dưỡng định kỳ','Bảo trì','Sửa chữa','Kiểm tra','Hiệu chuẩn','Khác'],LG=()=>D.log||[];
+const LNK=['Bảo dưỡng định kỳ','Sửa chữa','Kiểm tra','Hiệu chuẩn','Khác'],LG=()=>D.log||[];
 const cl=d=>String(d||'').localeCompare('');
 const dd=d=>Math.round((Date.parse(d)-Date.parse(today()))/864e5);
 function bti(id){const L=LG().filter(l=>l.equipId==id).sort((a,b)=>String(b.ngay).localeCompare(String(a.ngay)));
- const last=L.find(l=>l.loai==='Bảo dưỡng định kỳ'||l.loai==='Bảo trì'),nx=L.find(l=>l.tiep),next=nx?nx.tiep:'';
+ const last=L.find(l=>l.loai==='Bảo dưỡng định kỳ'),nx=L.find(l=>l.loai==='Bảo dưỡng định kỳ'&&l.tiep),next=nx?nx.tiep:'';
  let st='Chưa có lịch',c='#6b7a90',r=3;
  if(next&&!isNaN(Date.parse(next))){const n=dd(next);if(n<0){st='Quá hạn '+(-n)+' ngày';c='#c0392b';r=0}else if(n<=30){st='Sắp đến hạn ('+n+' ngày)';c='#b36200';r=1}else{st='Còn hạn';c='#1e7e4f';r=2}}
  return{L,last:last?last.ngay:'',next,st,c,r}}
@@ -262,13 +263,13 @@ function nk(id){const e=D.equip.find(x=>x.id==id)||{},b=bti(id);
  <div>${E(a.nd)}</div>${a.ex.filter(x=>x[1]).map(x=>`<div class="mu">${x[0]}: ${E(x[1])}</div>`).join('')}<div class="mu">Ghi bởi ${E(a.ng)}</div></div>`).join('')||'<div class="mu">Chưa có nhật ký cho thiết bị này.</div>'}</div>`,null,true)}
 async function nkDel(k,id,eid){if(!confirm('Xóa mục nhật ký này?'))return;try{D=await api('del',{t:k==='f'?'fail':'log',id});render();toast('Đã xóa');nk(eid)}catch(e){toast(e.message,1)}}
 function addLog(eid,pre){mdl('Ghi nhật ký bảo dưỡng - '+nmE(eid),`<div class="fg"><div class="fc"><label>Ngày thực hiện</label><input type="date" id="l1" value="${today()}"></div>
- <div class="fc"><label>Loại công việc</label><select id="l2" onchange="$('lx').style.display=this.value==='Sửa chữa'?'':'none'">${LNK.map(x=>`<option ${x===pre?'selected':''}>${x}</option>`).join('')}</select></div>
+ <div class="fc"><label>Loại công việc</label><select id="l2" onchange="$('lx').style.display=this.value==='Sửa chữa'?'':'none';$('lt').style.display=this.value==='Bảo dưỡng định kỳ'?'':'none'">${LNK.map(x=>`<option ${x===pre?'selected':''}>${x}</option>`).join('')}</select></div>
  <div class="fc s2" id="lx" style="display:${pre==='Sửa chữa'?'':'none'}"><label class="ck"><input type="checkbox" id="l7"> Đã sửa chữa xong, xác nhận thiết bị đã được khắc phục</label><div class="mu">Nếu chưa tích, thiết bị chuyển sang trạng thái Đang sửa chữa cho đến khi bạn xác nhận khắc phục.</div></div>
  <div class="fc s2"><label>Nội dung thực hiện</label><textarea id="l3" rows="3"></textarea></div>
  <div class="fc"><label>Người thực hiện</label><input id="l4" value="${E(U.ten)}"></div><div class="fc"><label>Kết quả</label><input id="l5" placeholder="VD: Hoạt động bình thường"></div>
- <div class="fc"><label>Ngày bảo dưỡng tiếp theo</label><input type="date" id="l6"></div></div>`,async()=>{
+ <div class="fc" id="lt" style="display:${!pre||pre==='Bảo dưỡng định kỳ'?'':'none'}"><label>Ngày bảo dưỡng tiếp theo</label><input type="date" id="l6"></div></div>`,async()=>{
  if(!$('l1').value||!$('l3').value)throw new Error('Nhập ngày và nội dung thực hiện');
- D=await api('save',{t:'log',row:{equipId:eid,ngay:$('l1').value,loai:$('l2').value,noidung:$('l3').value,thuchien:$('l4').value,ketqua:$('l5').value,tiep:$('l6').value,xong:$('l2').value==='Sửa chữa'&&$('l7').checked}});render();toast('Đã ghi nhật ký');nk(eid);return false},true)}
+ D=await api('save',{t:'log',row:{equipId:eid,ngay:$('l1').value,loai:$('l2').value,noidung:$('l3').value,thuchien:$('l4').value,ketqua:$('l5').value,tiep:$('l2').value==='Bảo dưỡng định kỳ'?$('l6').value:'',xong:$('l2').value==='Sửa chữa'&&$('l7').checked}});render();toast('Đã ghi nhật ký');nk(eid);return false},true)}
 function btV(){const q=D.equip.filter(x=>x.nhom===G).map(x=>({x,b:bti(x.id)})),c=[0,1,2,3].map(r=>q.filter(y=>y.b.r===r).length);
  return head('Bảo dưỡng - '+E(G),`<input placeholder="Tìm theo tên, Serial Number, Part Number..." value="${E(S)}" oninput="S=this.value;btRows()">`)+
  `<div class="fbar"><div class="frow"><div class="seg"><span class="st" style="color:#c0392b;padding:6px 10px">Quá hạn: <b>${c[0]}</b></span><span class="st" style="color:#b36200;padding:6px 10px">Sắp đến hạn: <b>${c[1]}</b></span><span class="st" style="color:#1e7e4f;padding:6px 10px">Còn hạn: <b>${c[2]}</b></span><span class="st" style="color:#6b7a90;padding:6px 10px">Chưa có lịch: <b>${c[3]}</b></span></div><span class="mu" id="cnt"></span></div></div>
