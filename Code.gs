@@ -9,7 +9,7 @@ const FOLDER_ID = 'DAN_ID_THU_MUC_DRIVE_LUU_ANH';
 //  sn=Serial Number | pn=Part Number | hang=Hãng sản xuất | xuatxu=Xuất xứ | nam=Năm sản xuất | hethong=Hệ thống
 //  tinhtrang=Tình trạng vật tư | nhomtb=Phân nhóm thiết bị | diadiem=Địa điểm | donvi=Đơn vị quản lý
 //  taisan=Tài sản vật tư dự phòng | nguyengia=Nguyên giá | ghichu=Thông tin bổ sung
-// Các cột riêng của web: nhom=nhóm hệ thống (menu) | tu=phân hệ/tủ (tab) | tt=tình trạng hoạt động (Tốt/Cảnh báo/Thiết bị đang sự cố/Đang sửa chữa)
+// Các cột riêng của web: nhom=nhóm hệ thống (menu) | tu=phân hệ/tủ (tab) | tt=tình trạng hoạt động (Tốt/Thiết bị đang sự cố/Đang sửa chữa)
 const MAU = 'stt,loai,tenkt,hang,xuatxu,nam,hethong,tinhtrang,nhomtb,diadiem,donvi,taisan,nguyengia';
 const H = {
   equip: 'id,ten,sl,nhom,tt,sn,pn,anh,ghichu,capnhat,nguoi,tu,' + MAU,
@@ -188,7 +188,7 @@ function dongBoSuCo(eid, us) {
   let tt = e.tt;
   if (sua > 0) tt = 'Đang sửa chữa';      // đang có lần sửa chữa chưa xác nhận khắc phục
   else if (mo > 0) tt = DANG;
-  else if ([DANG, 'Hư hỏng', 'Đang sửa chữa'].indexOf(e.tt) >= 0) tt = 'Tốt';
+  else if ([DANG, 'Hư hỏng', 'Đang sửa chữa', 'Cảnh báo'].indexOf(e.tt) >= 0) tt = 'Tốt';
   if (tt !== e.tt) { e.tt = tt; e.capnhat = today(); e.nguoi = us.ten; wr('equip', e); }
 }
 
