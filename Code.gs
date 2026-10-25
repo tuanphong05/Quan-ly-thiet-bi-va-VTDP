@@ -9,7 +9,7 @@ const FOLDER_ID = 'DAN_ID_THU_MUC_DRIVE_LUU_ANH';
 //  sn=Serial Number | pn=Part Number | hang=Hãng sản xuất | xuatxu=Xuất xứ | nam=Năm sản xuất | hethong=Hệ thống
 //  tinhtrang=Tình trạng vật tư | nhomtb=Phân nhóm thiết bị | diadiem=Địa điểm | donvi=Đơn vị quản lý
 //  taisan=Tài sản vật tư dự phòng | nguyengia=Nguyên giá | ghichu=Thông tin bổ sung
-// Các cột riêng của web: nhom=nhóm hệ thống (menu) | tu=phân hệ/tủ (tab) | tt=tình trạng hoạt động (Tốt/Cảnh báo/Hư hỏng/Đang sửa chữa)
+// Các cột riêng của web: nhom=nhóm hệ thống (menu) | tu=phân hệ/tủ (tab) | tt=tình trạng hoạt động (Tốt/Cảnh báo/Thiết bị đang sự cố/Đang sửa chữa)
 const MAU = 'stt,loai,tenkt,hang,xuatxu,nam,hethong,tinhtrang,nhomtb,diadiem,donvi,taisan,nguyengia';
 const H = {
   equip: 'id,ten,sl,nhom,tt,sn,pn,anh,ghichu,capnhat,nguoi,tu,' + MAU,
@@ -154,4 +154,16 @@ function chuanHoaSTT() {
     g.setNumberFormat('@').setValues(v.map(x => { const t = String(x[0]).replace(/,/g, '.'); if (t !== x[0]) n++; return [t]; }));
   });
   Logger.log('Đã đổi dạng số thứ tự cho ' + n + ' dòng.');
+}
+
+// Chạy 1 LẦN: đổi tình trạng hoạt động "Hư hỏng" thành "Thiết bị đang sự cố" trong sheet equip và spare.
+function doiTinhTrangSuCo() {
+  let n = 0;
+  ['equip', 'spare'].forEach(k => {
+    const s = SS().getSheetByName(k), h = hdr(k), r = s.getLastRow();
+    if (r < 2) return;
+    const g = s.getRange(2, h.indexOf('tt') + 1, r - 1, 1), v = g.getValues();
+    g.setValues(v.map(x => { if (String(x[0]).trim() === 'Hư hỏng') { n++; return ['Thiết bị đang sự cố']; } return x; }));
+  });
+  Logger.log('Đã đổi tình trạng cho ' + n + ' dòng.');
 }
