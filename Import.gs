@@ -131,3 +131,20 @@ function thayTheTu() {
   Logger.log('Đã xóa ' + n + ' dòng của "' + NHAP.TU_CU + '" (đã sao lưu sheet trước khi xóa).');
   nhapTheoMau();
 }
+
+// XÓA toàn bộ dữ liệu của một tủ (cả Khối thiết bị lẫn Vật tư dự phòng) để tab của tủ đó biến mất khỏi web.
+// Cách dùng: đặt NHAP.TU_CU = tên tủ cần xóa (VD 'Tủ Radar Distribution'), NHAP.NHOM = đúng nhóm hệ thống, rồi chạy xoaTu.
+// Hàm tự sao lưu mỗi sheet thành sheet mới tên saoluu_... trước khi xóa.
+function xoaTu() {
+  if (!NHAP.TU_CU) throw Error('Chưa điền TU_CU');
+  let n = 0;
+  ['equip', 'spare'].forEach(k => {
+    const dst = SS().getSheetByName(k), h = hdr(k), ci = h.indexOf('tu'), ni = h.indexOf('nhom');
+    const v = dst.getDataRange().getDisplayValues();
+    if (!v.slice(1).some(r => r[ci] === NHAP.TU_CU && r[ni] === NHAP.NHOM)) return;
+    dst.copyTo(SS()).setName('saoluu_' + k + '_' + Utilities.formatDate(new Date(), 'GMT+7', 'yyyyMMdd_HHmmss'));
+    for (let i = v.length - 1; i >= 1; i--)
+      if (v[i][ci] === NHAP.TU_CU && v[i][ni] === NHAP.NHOM) { dst.deleteRow(i + 1); n++; }
+  });
+  Logger.log('Đã xóa ' + n + ' dòng của "' + NHAP.TU_CU + '" (có sao lưu trước khi xóa).');
+}
