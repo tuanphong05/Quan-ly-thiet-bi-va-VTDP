@@ -29,7 +29,8 @@ const BO_COT = {
 const chuan = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/đ/g, 'd').replace(/\s+/g, ' ').trim();
 
-function nhapTheoMau() {
+// Đọc sheet nguồn theo mẫu, trả về danh sách vật tư (chưa kiểm tra trùng)
+function docMau() {
   const src = SS().getSheetByName(NHAP.NGUON);
   if (!src) throw Error('Không tìm thấy sheet "' + NHAP.NGUON + '"');
   if (NHAP.DICH !== 'equip' && NHAP.DICH !== 'spare') throw Error('DICH phải là "equip" hoặc "spare"');
@@ -49,12 +50,6 @@ function nhapTheoMau() {
     if (n >= 3) { hr = i; col = c; }
   }
   if (hr < 0) throw Error('Không thấy dòng tiêu đề theo mẫu (Loại vật tư, Tên sử dụng, Serial Number...)');
-
-  const dst = SS().getSheetByName(NHAP.DICH), h = hdr(NHAP.DICH);
-  const SO = /^[\d.,]+$/;   // số thứ tự dạng 1, 2, 5,1, 5.2
-  const kh = x => [x.nhom, x.tu, x.loai, x.tenkt, x.ten, x.pn, x.sn].map(t => String(t || '').trim()).join('|');
-  const have = new Map();   // khóa -> số dòng giống hệt đã có: chạy lại không bị nhân đôi
-  rd(NHAP.DICH).forEach(x => { const k = kh(x); have.set(k, (have.get(k) || 0) + 1); });
 
   const get = (r, k) => (col[k] === undefined ? '' : String(v[r][col[k]] || '').trim());
   const out = []; let phanHe = '';
@@ -76,13 +71,47 @@ function nhapTheoMau() {
       nguyengia: get(i, 'nguyengia'), ghichu: get(i, 'ghichu'),
       nhom: NHAP.NHOM, tu: NHAP.TU || get(i, 'tu') || phanHe, tt: get(i, 'tt') || 'Tốt'
     };
-    const k = kh(o);
-    if (have.get(k) > 0) { have.set(k, have.get(k) - 1); continue; }
-    out.push(Object.assign({ id: nid(), anh: '', anhtem: '', cauhinh: '', capnhat: today(), nguoi: 'Nhập từ sheet gốc' }, o));
+    out.push(o);
   }
+  return out;
+}
+
+// Khóa nhận diện một vật tư
+const SO = /^[\d.,]+$/;   // số thứ tự dạng 1, 2, 5,1, 5.2
+const kh = x => [x.nhom, x.tu, x.loai, x.tenkt, x.ten, x.pn, x.sn].map(t => String(t || '').trim()).join('|');
+
+function nhapTheoMau() {
+  capNhatSTT();   // điền luôn số thứ tự cho các dòng cũ còn trống
+  const dst = SS().getSheetByName(NHAP.DICH), h = hdr(NHAP.DICH);
+  const have = new Map();   // khóa -> số dòng giống hệt đã có: chạy lại không bị nhân đôi
+  rd(NHAP.DICH).forEach(x => { const k = kh(x); have.set(k, (have.get(k) || 0) + 1); });
+  const out = [];
+  docMau().forEach(o => {
+    const k = kh(o);
+    if (have.get(k) > 0) { have.set(k, have.get(k) - 1); return; }
+    out.push(Object.assign({ id: nid(), anh: '', anhtem: '', cauhinh: '', capnhat: today(), nguoi: 'Nhập từ sheet gốc' }, o));
+  });
   if (!out.length) { Logger.log('Không có dòng mới để nhập.'); return; }
   const dau = dst.getLastRow() + 1, cuoi = dau + out.length - 1;
   if (cuoi > dst.getMaxRows()) dst.insertRowsAfter(dst.getMaxRows(), cuoi - dst.getMaxRows());
   dst.getRange(dau, 1, out.length, h.length).setValues(out.map(o => h.map(c => o[c] ?? '')));
   Logger.log('Đã nhập ' + out.length + ' dòng vào sheet ' + NHAP.DICH + ' (phân hệ: ' + (NHAP.TU || 'theo sheet') + ').');
+}
+
+// Điền Số thứ tự (cột stt) cho các dòng ĐÃ nhập trước đó mà còn trống, lấy từ sheet nguồn. Không xóa/không thêm dòng nào.
+function capNhatSTT() {
+  const items = docMau(), q = new Map();
+  items.forEach(o => { const k = kh(o); if (!q.has(k)) q.set(k, []); q.get(k).push(o.stt); });
+  const s = SS().getSheetByName(NHAP.DICH); hdr(NHAP.DICH);
+  const v = s.getDataRange().getDisplayValues(), h = v[0], ci = h.indexOf('stt');
+  const idx = {}; ['nhom', 'tu', 'loai', 'tenkt', 'ten', 'pn', 'sn'].forEach(c => idx[c] = h.indexOf(c));
+  let n = 0;
+  const col = v.slice(1).map(r => {
+    if (r[ci] !== '' || r[0] === '') return [r[ci]];
+    const k = kh(Object.fromEntries(Object.keys(idx).map(c => [c, r[idx[c]]]))), a = q.get(k);
+    if (a && a.length) { n++; return [a.shift()]; }
+    return [r[ci]];
+  });
+  if (col.length) s.getRange(2, ci + 1, col.length, 1).setNumberFormat('@').setValues(col);
+  Logger.log('Đã điền số thứ tự cho ' + n + ' dòng.');
 }

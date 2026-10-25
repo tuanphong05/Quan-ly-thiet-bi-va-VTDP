@@ -162,7 +162,7 @@ function render(){$('menu').innerHTML=SYS.map((g,i)=>{const o=OP.has(g);return `
 function fbar(t){const cb=CAB[G],base=D[t].filter(x=>x.nhom===G),cur=base.filter(x=>!C||x.tu===C);
  const tabs=cb?`<div class="tabs">${cb.map((c,i)=>`<button class="${C===c?'on':''}" onclick="C=CAB[G][${i}];render()">${E(c)}<span class="bd">${base.filter(x=>x.tu===c).length}</span></button>`).join('')}</div>`:'';
  const seg=ST.map(x=>`<button class="${F===x?'on':''}" onclick="F=F==='${x}'?'all':'${x}';render()"><i style="background:${COL[x]}"></i>${x}<span>${cur.filter(y=>y.tt===x).length}</span></button>`).join('');
- return `<div class="fbar">${tabs}<div class="frow"><div class="seg">${seg}</div><div class="fr2"><label class="gm"><input type="checkbox" ${GM?'checked':''} onchange="GM=this.checked;rows()"> Gom thiết bị cùng tên</label><span class="mu" id="cnt"></span></div></div></div>`}
+ return `<div class="fbar">${tabs}<div class="frow"><div class="seg">${seg}</div><div class="fr2"><span class="mu" id="cnt"></span></div></div></div>`}
 const CW={stt:80,loai:150,tenkt:190,ten:190,sl:90,sn:120,pn:120,hang:110,xuatxu:90,nam:80,hethong:150,tinhtrang:120,nhomtb:110,diadiem:130,donvi:170,taisan:130,nguyengia:100,ghichu:200};
 const cols=t=>[...MAU.map(([k,l])=>({k,l,w:CW[k]})),{k:'tt',l:'Tình trạng hoạt động',w:130},t==='equip'?{k:'hh',l:'Số lần hư hỏng',w:90}:{k:'cauhinh',l:'Tình trạng cấu hình',w:180},{k:'cn',l:'Cập nhật',w:130},{k:'act',l:'Thao tác',w:120}].filter(c=>c.k!=='act'||adm());
 function listV(t){
@@ -171,7 +171,9 @@ function listV(t){
  fbar(t)+`
  <div class="tw"><table class="big"><thead><tr>${cols(t).map(c=>`<th style="min-width:${c.w}px"${c.k==='act'?' class="stk"':''}>${c.l}</th>`).join('')}</tr></thead><tbody id="tb"></tbody></table></div>`}
 const cp=(a,b)=>String(a||'').trim().localeCompare(String(b||'').trim(),'vi',{numeric:true,sensitivity:'base'});
-const cmpX=(a,b)=>cp(nm(a),nm(b))||cp(a.tu,b.tu)||cp(a.pn,b.pn)||cp(a.sn,b.sn);
+const sk=v=>String(v||'').trim().split(/[.,]/).map(n=>parseInt(n)||0);
+const cs0=(a,b)=>{const x=String(a.stt||'').trim(),y=String(b.stt||'').trim();if(!x||!y)return x?-1:y?1:0;const p=sk(x),q=sk(y);for(let i=0;i<Math.max(p.length,q.length);i++){const d=(p[i]||0)-(q[i]||0);if(d)return d}return 0};
+const cmpX=(a,b)=>cs0(a,b)||cp(nm(a),nm(b))||cp(a.pn,b.pn)||cp(a.sn,b.sn);
 function rows(){const t=V,q=S.toLowerCase(),a=D[t].filter(x=>(F==='all'||x.tt===F)&&x.nhom===G&&(!C||x.tu===C)&&[...MAU.map(m=>x[m[0]]),x.tu,x.nhom].join(' ').toLowerCase().includes(q)).sort(cmpX);
  $('cnt').textContent='Hiển thị '+a.length+' mục';
  const cs=cols(t),R=(x,c)=>`<tr class="${c||''}">${cs.map(k=>{const a=k.k;
@@ -183,13 +185,7 @@ function rows(){const t=V,q=S.toLowerCase(),a=D[t].filter(x=>(F==='all'||x.tt===
  if(a==='act')return `<td class="stk"><button class="btn btn-o btn-s" onclick="ed('${t}','${x.id}')">Sửa</button> <button class="btn btn-d btn-s" onclick="del('${t}','${x.id}')">Xóa</button></td>`;
  return `<td class="${a==='ten'?'':a==='sl'?'c':''}">${a==='ten'?'<b>'+E(x.ten||nm(x))+'</b>':E(x[a])}</td>`}).join('')}</tr>`;
 let h='';
- if(!GM)h=a.map(x=>R(x)).join('');
- else{const g=new Map();a.forEach(x=>{const k=[x.tu,nm(x).trim().toLowerCase()].join('|');if(!g.has(k))g.set(k,[]);g.get(k).push(x)});GK=[];
-  g.forEach((m,k)=>{if(m.length<2){h+=R(m[0]);return}
-   const i=GK.push(k)-1,cl=CG.has(k),pn=[...new Set(m.map(x=>String(x.pn||'').trim()))].filter(Boolean),sl=m.reduce((n,x)=>n+slN(x.sl),0),
-   sts=ST.map(z=>[z,m.filter(x=>x.tt===z).length]).filter(z=>z[1]).map(([z,n])=>`<span class="st" style="color:${COL[z]}">${z}: ${n}</span>`).join(' ');
-   h+=`<tr class="gh" onclick="tgG(${i})"><td colspan="${cs.length}"><div class="gl"><span class="tg">${cl?'▶':'▼'}</span><b>${E(nm(m[0]))}</b><span class="bd">${m.length} thiết bị</span><span class="mu">Tổng số lượng: ${sl}</span>${sts}<span class="mu">${pn.length>1?pn.length+' Part Number khác nhau':pn.length?'Part Number: '+E(pn[0]):''}</span></div></td></tr>`;
-   if(!cl)h+=m.map(x=>R(x,'gi')).join('')})}
+ h=a.map(x=>R(x)).join('');
  $('tb').innerHTML=h||'<tr><td colspan="'+cs.length+'" class="mu">Không có dữ liệu.</td></tr>'}
 const tgG=i=>{const k=GK[i];CG.has(k)?CG.delete(k):CG.add(k);rows()};
 
