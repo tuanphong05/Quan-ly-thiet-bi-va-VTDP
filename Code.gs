@@ -14,7 +14,7 @@ const MAU = 'stt,loai,tenkt,hang,xuatxu,nam,hethong,tinhtrang,nhomtb,diadiem,don
 const H = {
   equip: 'id,ten,sl,nhom,tt,sn,pn,anh,ghichu,capnhat,nguoi,tu,' + MAU,
   spare: 'id,ten,sl,nhom,tt,sn,pn,anh,anhtem,cauhinh,capnhat,nguoi,tu,ghichu,' + MAU,
-  fail: 'id,equipId,ngay,mota,nguyennhan,khacphuc,nguoi',
+  fail: 'id,equipId,ngay,mota,nguyennhan,khacphuc,nguoi,ngaykp',
   log: 'id,equipId,ngay,loai,noidung,thuchien,ketqua,tiep,nguoi,capnhat',   // nhật ký bảo trì, bảo dưỡng của từng thiết bị
   cfg: 'id,spareId,ngay,nguoi,noidung',
   swap: 'id,ngay,nguoi,equipId,spareId,sl,ghichu',
@@ -85,14 +85,18 @@ function doPost(e) {
       if (q.a !== 'all' && us.role !== 'quantri') throw Error('Bạn chỉ có quyền xem');
       if (q.a === 'save' || q.a === 'del') if (!H[q.t] || q.t === 'users') throw Error('Bảng không hợp lệ');
       if (q.a === 'save') {
-        const o = q.row; o.id = o.id || nid(); o.capnhat = today(); o.nguoi = us.ten;
+        const o = q.row; o.id = o.id || nid(); o.capnhat = today(); if (!(q.t === 'fail' && o.nguoi)) o.nguoi = us.ten;
+        if (q.t === 'fail') o.ngaykp = String(o.khacphuc || '').trim() ? (o.ngaykp || today()) : '';
         if (q.t === 'spare' && o.cauhinh) {
           const old = rd('spare').find(x => x.id == o.id);
           if (!old || old.cauhinh != o.cauhinh)
             wr('cfg', { id: nid(), spareId: o.id, ngay: today(), nguoi: us.ten, noidung: o.cauhinh });
         }
-        wr(q.t, o); r = all();
-      } else if (q.a === 'del') { rm(q.t, q.id); r = all(); }
+        wr(q.t, o); if (q.t === 'fail') dongBoSuCo(o.equipId, us); r = all();
+      } else if (q.a === 'del') {
+        const f = q.t === 'fail' ? rd('fail').find(x => x.id == q.id) : null;
+        rm(q.t, q.id); if (f) dongBoSuCo(f.equipId, us); r = all();
+      }
       else if (q.a === 'swap') {
         const o = q.row, sl = Number(o.sl), sp = rd('spare').find(x => x.id == o.spareId), co = sp ? soLuong(sp.sl) : 0;
         if (!sp || !(sl >= 1) || sl > co) throw Error('Không đủ số lượng vật tư dự phòng');
@@ -166,4 +170,18 @@ function doiTinhTrangSuCo() {
     g.setValues(v.map(x => { if (String(x[0]).trim() === 'Hư hỏng') { n++; return ['Thiết bị đang sự cố']; } return x; }));
   });
   Logger.log('Đã đổi tình trạng cho ' + n + ' dòng.');
+}
+
+// Đồng bộ tình trạng hoạt động của thiết bị theo sự cố trong nhật ký:
+//  - còn ít nhất một sự cố CHƯA có "Cách khắc phục"  -> "Thiết bị đang sự cố"
+//  - mọi sự cố đã có "Cách khắc phục"                -> trở lại "Tốt" (nếu đang là sự cố/hư hỏng/đang sửa chữa)
+function dongBoSuCo(eid, us) {
+  const e = rd('equip').find(x => x.id == eid);
+  if (!e) return;
+  const DANG = 'Thiết bị đang sự cố';
+  const mo = rd('fail').filter(f => f.equipId == eid && !String(f.khacphuc || '').trim()).length;
+  let tt = e.tt;
+  if (mo > 0) tt = DANG;
+  else if ([DANG, 'Hư hỏng', 'Đang sửa chữa'].indexOf(e.tt) >= 0) tt = 'Tốt';
+  if (tt !== e.tt) { e.tt = tt; e.capnhat = today(); e.nguoi = us.ten; wr('equip', e); }
 }
