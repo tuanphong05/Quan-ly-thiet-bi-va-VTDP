@@ -12,7 +12,8 @@ const NHAP = {
   NGUON: 'Phân hệ anten',                    // tên tab chứa bảng theo mẫu
   DICH: 'equip',                             // 'equip' = Khối thiết bị | 'spare' = Vật tư dự phòng
   NHOM: 'Hệ thống PSR/MSSR Easat EA29190',   // phải trùng đúng 1 trong 7 hệ thống trên web
-  TU: ''                                     // để trống = lấy tên phân hệ ghi trong sheet; điền tên để ép tất cả vào một tab
+  TU: '',  // để trống = lấy tên phân hệ ghi trong sheet; điền tên để ép tất cả vào một tab
+  TU_CU: 'Tủ ACU'                               // chỉ dùng cho hàm thayTheTu: tên tủ cũ cần thay thế
 };
 
 // tên tiêu đề (viết thường, bỏ dấu) -> trường dữ liệu
@@ -114,4 +115,19 @@ function capNhatSTT() {
   });
   if (col.length) s.getRange(2, ci + 1, col.length, 1).setNumberFormat('@').setValues(col);
   Logger.log('Đã điền số thứ tự cho ' + n + ' dòng.');
+}
+
+// THAY THẾ dữ liệu của một tủ: sao lưu sheet đích, xóa các dòng có phân hệ/tủ = NHAP.TU_CU, rồi nhập lại từ sheet nguồn.
+// VD: đặt NGUON = 'Tủ điều khiển Anten', TU = 'Tủ điều khiển Anten', TU_CU = 'Tủ ACU' rồi chạy thayTheTu.
+function thayTheTu() {
+  if (!NHAP.TU_CU) throw Error('Chưa điền TU_CU');
+  if (!SS().getSheetByName(NHAP.NGUON)) throw Error('Không tìm thấy sheet "' + NHAP.NGUON + '"');
+  const dst = SS().getSheetByName(NHAP.DICH), h = hdr(NHAP.DICH), ci = h.indexOf('tu'), ni = h.indexOf('nhom');
+  const v = dst.getDataRange().getDisplayValues();
+  dst.copyTo(SS()).setName('saoluu_' + NHAP.DICH + '_' + Utilities.formatDate(new Date(), 'GMT+7', 'yyyyMMdd_HHmmss'));
+  let n = 0;
+  for (let i = v.length - 1; i >= 1; i--)
+    if (v[i][ci] === NHAP.TU_CU && v[i][ni] === NHAP.NHOM) { dst.deleteRow(i + 1); n++; }
+  Logger.log('Đã xóa ' + n + ' dòng của "' + NHAP.TU_CU + '" (đã sao lưu sheet trước khi xóa).');
+  nhapTheoMau();
 }
