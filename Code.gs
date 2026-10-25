@@ -14,7 +14,7 @@ const MAU = 'stt,loai,tenkt,hang,xuatxu,nam,hethong,tinhtrang,nhomtb,diadiem,don
 const H = {
   equip: 'id,ten,sl,nhom,tt,sn,pn,anh,ghichu,capnhat,nguoi,tu,' + MAU,
   spare: 'id,ten,sl,nhom,tt,sn,pn,anh,anhtem,cauhinh,capnhat,nguoi,tu,ghichu,' + MAU,
-  fail: 'id,equipId,ngay,mota,nguyennhan,khacphuc,nguoi,ngaykp',
+  fail: 'id,equipId,ngay,mota,nguyennhan,khacphuc,nguoi,ngaykp,anhhuong',
   log: 'id,equipId,ngay,loai,noidung,thuchien,ketqua,tiep,nguoi,capnhat,xacnhan,xnnguoi',   // nhật ký bảo trì, bảo dưỡng của từng thiết bị
   cfg: 'id,spareId,ngay,nguoi,noidung',
   swap: 'id,ngay,nguoi,equipId,spareId,sl,ghichu',
