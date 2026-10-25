@@ -59,6 +59,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .twb{max-height:calc(100vh - 150px);overflow:auto}.twb thead th{position:sticky;top:0;z-index:3}.twb thead th.stk{z-index:4}
 .fz{position:sticky}td.fz{background:#fff;z-index:2}.twb thead th.fz{z-index:5}.fz.e{box-shadow:2px 0 0 var(--border)}
 .nks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--blue-light);border-radius:8px;padding:10px 12px;font-size:13px}.nks span{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.mb input[type=checkbox]{width:auto}.ck{display:flex;align-items:center;gap:8px;font-size:13px!important;color:var(--text)!important;cursor:pointer}
 .nkb{display:flex;gap:8px;flex-wrap:wrap}.nkl{display:flex;flex-direction:column;gap:8px}.nki{border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:8px;padding:8px 12px;font-size:13px}.nki.hh{border-left-color:#c0392b}
 .nkh{display:flex;align-items:center;gap:10px;margin-bottom:3px}.nkh a{margin-left:auto;font-size:12px;color:#c0392b}
 @media(max-width:640px){.nks{grid-template-columns:1fr 1fr}}
@@ -112,7 +113,7 @@ body.nvo .nav{transform:none}body.nvo .ov{display:block;position:fixed;inset:56p
 <div class="shell">
 <div class="nav"><div class="nu"><span id="un">-</span><small id="ur"></small></div>
 <div class="na"><button class="btn btn-o btn-s" style="width:100%" onclick="location.reload()">Đăng xuất</button></div>
-<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 25/10/2026 16:40</div></div>
+<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 25/10/2026 18:40</div></div>
 <div class="main" id="main"></div></div>
 <div class="mo hidden" id="mo"><div class="mb" id="mbx"><h3 id="mt"></h3><div id="mbody"></div><div id="er"></div>
 <div class="r"><button class="btn btn-o" onclick="cm()">Đóng</button><button class="btn" id="ok">Lưu</button></div></div></div>
@@ -254,19 +255,20 @@ function bti(id){const L=LG().filter(l=>l.equipId==id).sort((a,b)=>String(b.ngay
 const stB=b=>`<span class="st" style="color:${b.c}">${E(b.st)}</span>`;
 function nk(id){const e=D.equip.find(x=>x.id==id)||{},b=bti(id);
  const A=[...D.fail.filter(f=>f.equipId==id).map(f=>({k:'f',id:f.id,ngay:f.ngay,loai:'Sự cố',nd:f.mota,ex:[['Nguyên nhân',f.nguyennhan],['Cách khắc phục',f.khacphuc],['Khắc phục ngày',f.ngaykp]],ng:f.nguoi,open:!String(f.khacphuc||'').trim()})),
- ...b.L.map(l=>({k:'l',id:l.id,ngay:l.ngay,loai:l.loai,nd:l.noidung,ex:[['Người thực hiện',l.thuchien],['Kết quả',l.ketqua],['Bảo dưỡng tiếp theo',l.tiep]],ng:l.nguoi}))].sort((a,c)=>String(c.ngay).localeCompare(String(a.ngay)));
- mdl('Nhật ký - '+nm(e),`<div class="nks"><div><span>Serial Number</span>${E(e.sn)||'-'}</div><div><span>Part Number</span>${E(e.pn)||'-'}</div><div><span>Bảo dưỡng gần nhất</span>${E(b.last)||'-'}</div><div><span>Bảo dưỡng tiếp theo</span>${E(b.next)||'-'}</div><div><span>Tình trạng bảo dưỡng</span>${stB(b)}</div><div><span>Số lần sự cố</span><b>${D.fail.filter(f=>f.equipId==id).length}</b></div></div>
+ ...b.L.map(l=>({k:'l',id:l.id,ngay:l.ngay,loai:l.loai,nd:l.noidung,ex:[['Người thực hiện',l.thuchien],['Kết quả',l.ketqua],['Bảo dưỡng tiếp theo',l.tiep],['Xác nhận đã khắc phục',l.xacnhan?l.xacnhan+' - '+(l.xnnguoi||''):'']],ng:l.nguoi,rep:l.loai==='Sửa chữa'&&!String(l.xacnhan||'').trim()}))].sort((a,c)=>String(c.ngay).localeCompare(String(a.ngay)));
+ mdl('Nhật ký - '+nm(e),`<div class="nks"><div><span>Serial Number</span>${E(e.sn)||'-'}</div><div><span>Part Number</span>${E(e.pn)||'-'}</div><div><span>Bảo dưỡng gần nhất</span>${E(b.last)||'-'}</div><div><span>Bảo dưỡng tiếp theo</span>${E(b.next)||'-'}</div><div><span>Tình trạng bảo dưỡng</span>${stB(b)}</div><div><span>Tình trạng thiết bị</span>${chip(e.tt)}</div><div><span>Số lần sự cố</span><b>${D.fail.filter(f=>f.equipId==id).length}</b></div></div>
  ${adm()?`<div class="nkb"><button class="btn btn-s" onclick="addLog('${id}')">+ Ghi nhật ký bảo dưỡng</button><button class="btn btn-d btn-s" onclick="addFail('${id}')">+ Ghi nhận sự cố</button></div>`:''}
- <div class="nkl">${A.map(a=>`<div class="nki ${a.k==='f'?'hh':''}"><div class="nkh"><b>${E(a.ngay)}</b><span class="bd">${E(a.loai)}</span>${a.open?'<span class="st" style="color:#c0392b">Đang sự cố</span>':''}${a.open&&adm()?`<button class="btn btn-s" onclick="kp('${a.id}','${id}')">Cập nhật cách khắc phục</button>`:''}${adm()?`<a href="#" onclick="nkDel('${a.k}','${a.id}','${id}');return false">Xóa</a>`:''}</div>
+ <div class="nkl">${A.map(a=>`<div class="nki ${a.k==='f'?'hh':''}"><div class="nkh"><b>${E(a.ngay)}</b><span class="bd">${E(a.loai)}</span>${a.open?'<span class="st" style="color:#c0392b">Đang sự cố</span>':''}${a.rep?'<span class="st" style="color:#1a56b8">Đang sửa chữa</span>':''}${a.rep&&adm()?`<button class="btn btn-s" onclick="xnKP('${a.id}','${id}')">Xác nhận đã khắc phục</button>`:''}${a.open&&adm()?`<button class="btn btn-o btn-s" onclick="addLog('${id}','Sửa chữa')">Ghi nhận sửa chữa</button>`:''}${a.open&&adm()?`<button class="btn btn-s" onclick="kp('${a.id}','${id}')">Cập nhật cách khắc phục</button>`:''}${adm()?`<a href="#" onclick="nkDel('${a.k}','${a.id}','${id}');return false">Xóa</a>`:''}</div>
  <div>${E(a.nd)}</div>${a.ex.filter(x=>x[1]).map(x=>`<div class="mu">${x[0]}: ${E(x[1])}</div>`).join('')}<div class="mu">Ghi bởi ${E(a.ng)}</div></div>`).join('')||'<div class="mu">Chưa có nhật ký cho thiết bị này.</div>'}</div>`,null,true)}
 async function nkDel(k,id,eid){if(!confirm('Xóa mục nhật ký này?'))return;try{D=await api('del',{t:k==='f'?'fail':'log',id});render();toast('Đã xóa');nk(eid)}catch(e){toast(e.message,1)}}
-function addLog(eid){mdl('Ghi nhật ký bảo dưỡng - '+nmE(eid),`<div class="fg"><div class="fc"><label>Ngày thực hiện</label><input type="date" id="l1" value="${today()}"></div>
- <div class="fc"><label>Loại công việc</label><select id="l2">${LNK.map(x=>`<option>${x}</option>`).join('')}</select></div>
+function addLog(eid,pre){mdl('Ghi nhật ký bảo dưỡng - '+nmE(eid),`<div class="fg"><div class="fc"><label>Ngày thực hiện</label><input type="date" id="l1" value="${today()}"></div>
+ <div class="fc"><label>Loại công việc</label><select id="l2" onchange="$('lx').style.display=this.value==='Sửa chữa'?'':'none'">${LNK.map(x=>`<option ${x===pre?'selected':''}>${x}</option>`).join('')}</select></div>
+ <div class="fc s2" id="lx" style="display:${pre==='Sửa chữa'?'':'none'}"><label class="ck"><input type="checkbox" id="l7"> Đã sửa chữa xong, xác nhận thiết bị đã được khắc phục</label><div class="mu">Nếu chưa tích, thiết bị chuyển sang trạng thái Đang sửa chữa cho đến khi bạn xác nhận khắc phục.</div></div>
  <div class="fc s2"><label>Nội dung thực hiện</label><textarea id="l3" rows="3"></textarea></div>
  <div class="fc"><label>Người thực hiện</label><input id="l4" value="${E(U.ten)}"></div><div class="fc"><label>Kết quả</label><input id="l5" placeholder="VD: Hoạt động bình thường"></div>
  <div class="fc"><label>Ngày bảo dưỡng tiếp theo</label><input type="date" id="l6"></div></div>`,async()=>{
  if(!$('l1').value||!$('l3').value)throw new Error('Nhập ngày và nội dung thực hiện');
- D=await api('save',{t:'log',row:{equipId:eid,ngay:$('l1').value,loai:$('l2').value,noidung:$('l3').value,thuchien:$('l4').value,ketqua:$('l5').value,tiep:$('l6').value}});render();toast('Đã ghi nhật ký');nk(eid);return false},true)}
+ D=await api('save',{t:'log',row:{equipId:eid,ngay:$('l1').value,loai:$('l2').value,noidung:$('l3').value,thuchien:$('l4').value,ketqua:$('l5').value,tiep:$('l6').value,xong:$('l2').value==='Sửa chữa'&&$('l7').checked}});render();toast('Đã ghi nhật ký');nk(eid);return false},true)}
 function btV(){const q=D.equip.filter(x=>x.nhom===G).map(x=>({x,b:bti(x.id)})),c=[0,1,2,3].map(r=>q.filter(y=>y.b.r===r).length);
  return head('Bảo dưỡng - '+E(G),`<input placeholder="Tìm theo tên, Serial Number, Part Number..." value="${E(S)}" oninput="S=this.value;btRows()">`)+
  `<div class="fbar"><div class="frow"><div class="seg"><span class="st" style="color:#c0392b;padding:6px 10px">Quá hạn: <b>${c[0]}</b></span><span class="st" style="color:#b36200;padding:6px 10px">Sắp đến hạn: <b>${c[1]}</b></span><span class="st" style="color:#1e7e4f;padding:6px 10px">Còn hạn: <b>${c[2]}</b></span><span class="st" style="color:#6b7a90;padding:6px 10px">Chưa có lịch: <b>${c[3]}</b></span></div><span class="mu" id="cnt"></span></div></div>
@@ -281,4 +283,10 @@ function kp(fid,eid){const f=D.fail.find(x=>x.id==fid);if(!f)return;eid=eid||f.e
  mdl('Cập nhật cách khắc phục - '+nmE(f.equipId),`<div class="nki hh"><b>${E(f.ngay)}</b> - ${E(f.mota)}</div><label>Nguyên nhân</label><input id="k1" value="${E(f.nguyennhan)}"><label>Cách khắc phục</label><textarea id="k2" rows="3" placeholder="Nhập nội dung đã khắc phục. Sau khi lưu, thiết bị trở lại trạng thái Tốt."></textarea>`,async()=>{
  if(!$('k2').value.trim())throw new Error('Nhập nội dung cách khắc phục');
  D=await api('save',{t:'fail',row:{...f,nguyennhan:$('k1').value,khacphuc:$('k2').value.trim()}});render();toast('Đã cập nhật, thiết bị trở lại trạng thái Tốt');if(V==='fail')return true;nk(eid);return false})}
+
+// Xác nhận thiết bị đã được khắc phục sau sửa chữa -> thiết bị trở lại trạng thái "Tốt"
+function xnKP(lid,eid){const l=LG().find(x=>x.id==lid);if(!l)return;
+ mdl('Xác nhận khắc phục - '+nmE(eid),`<div class="nki"><b>${E(l.ngay)}</b> - ${E(l.noidung)}</div><label>Kết quả sau sửa chữa</label><input id="y1" value="${E(l.ketqua)}" placeholder="VD: Hoạt động bình thường"><label class="ck"><input type="checkbox" id="y2"> Tôi xác nhận thiết bị đã được khắc phục và hoạt động bình thường</label>`,async()=>{
+ if(!$('y2').checked)throw new Error('Hãy tích ô xác nhận thiết bị đã được khắc phục');
+ D=await api('save',{t:'log',row:{...l,ketqua:$('y1').value,xong:true}});render();toast('Đã xác nhận, thiết bị trở lại trạng thái Tốt');nk(eid);return false})}
 </script></body></html>
