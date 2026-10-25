@@ -112,7 +112,7 @@ body.nvo .nav{transform:none}body.nvo .ov{display:block;position:fixed;inset:56p
 <div class="shell">
 <div class="nav"><div class="nu"><span id="un">-</span><small id="ur"></small></div>
 <div class="na"><button class="btn btn-o btn-s" style="width:100%" onclick="location.reload()">Đăng xuất</button></div>
-<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets</div></div>
+<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 25/10/2026 15:40</div></div>
 <div class="main" id="main"></div></div>
 <div class="mo hidden" id="mo"><div class="mb" id="mbx"><h3 id="mt"></h3><div id="mbody"></div><div id="er"></div>
 <div class="r"><button class="btn btn-o" onclick="cm()">Đóng</button><button class="btn" id="ok">Lưu</button></div></div></div>
@@ -125,7 +125,7 @@ const API='https://script.google.com/macros/s/AKfycbxFyMV07upxQXxrmRsLF3IAsJYtQs
 const $=id=>document.getElementById(id),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ST=['Tốt','Cảnh báo','Hư hỏng','Đang sửa chữa'],COL={'Tốt':'#1e7e4f','Cảnh báo':'#b36200','Hư hỏng':'#c0392b','Đang sửa chữa':'#1a56b8'};
 const SYS=['Hệ thống PSR/MSSR','Hệ thống VCCS','Hệ thống VHF','Hệ thống RAPS','Hệ thống KVM','Hệ thống Radar thời tiết WRS400','Hệ thống ATM'];
-const CAB0={'Hệ thống PSR/MSSR':['Phân hệ Anten','Tủ điều khiển Anten','Tủ máy phát sơ cấp','Tủ máy thu sơ cấp','Tủ MSSR','Tủ truyền dẫn tín hiệu','Tủ Radar Distribution','Tủ Transponder']};
+const CAB0={'Hệ thống PSR/MSSR':['Phân hệ Anten','Tủ điều khiển Anten','Tủ máy phát sơ cấp','Tủ máy thu sơ cấp','Tủ MSSR','Tủ truyền dẫn tín hiệu','Tủ Radar Distribution','Tủ Test Transponder']};
 const TB=g=>{const b=CAB0[g];if(!b)return null;const ex=[...new Set([...D.equip,...D.spare].filter(x=>x.nhom===g&&x.tu&&!b.includes(x.tu)).map(x=>x.tu))].sort((p,q)=>String(p).localeCompare(String(q),'vi'));return[...b,...ex]};
 const CAB=new Proxy({},{get:(_,g)=>TB(g)});
 let C='',GM=true,GK=[];const CG=new Set();
