@@ -191,8 +191,9 @@ const nv=o=>document.body.classList.toggle('nvo',o===undefined?undefined:!!o);
 const go=(i,k)=>{nv(0);if(G!==SYS[i])C=(CAB[SYS[i]]||[])[0]||'';G=SYS[i];V=k;F='all';S='';OP.add(G);render()};
 function render(){$('menu').innerHTML=SYS.map((g,i)=>{const o=OP.has(g);return `<div class="mi ms ${G===g?'gr':''}" onclick="tg(${i})"><span>${o?'▼':'▶'}</span>${E(g)}</div>`+(o?MENU.map(([k,l])=>`<div class="mi sb ${G===g&&V===k?'on':''}" onclick="go(${i},'${k}')">${l}</div>`).join(''):'')}).join('');
  if(!V||!G){$('main').innerHTML='<div class="pg"><div class="mu" style="padding:60px 10px;text-align:center;font-size:14px">Chọn một hệ thống ở menu, sau đó chọn Khối thiết bị, Vật tư dự phòng, Bảo dưỡng, Hư hỏng hoặc Thay thế vật tư dự phòng để xem dữ liệu.</div></div>';return}
- $('main').innerHTML=`<div class="pg">${V==='equip'||V==='spare'?listV(V):V==='bt'?btV():V==='fail'?failV():swapV()}</div>`;if(V==='equip'||V==='spare')rows();if(V==='bt')btRows()}
-let SH=[];
+ const tq=document.querySelector('.tabs'),tl=tq&&LK===G+'|'+V?tq.scrollLeft:0;LK=G+'|'+V;
+ $('main').innerHTML=`<div class="pg">${V==='equip'||V==='spare'?listV(V):V==='bt'?btV():V==='fail'?failV():swapV()}</div>`;if(V==='equip'||V==='spare')rows();if(V==='bt')btRows();const t2=document.querySelector('.tabs');if(t2)t2.scrollLeft=tl}
+let SH=[],LK='';
 function fbar(t){const cb=CAB[G],base=D[t].filter(x=>x.nhom===G);SH=cb?cb.filter(c=>base.some(x=>x.tu===c)):[];if(cb)C=SH.includes(C)?C:(SH[0]||'');const cur=base.filter(x=>!C||x.tu===C);
  const tabs=SH.length?`<div class="tabs">${SH.map((c,i)=>`<button class="${C===c?'on':''}" onclick="C=SH[${i}];render()">${E(c)}<span class="bd">${base.filter(x=>x.tu===c).length}</span></button>`).join('')}</div>`:'';
  const seg=ST.map(x=>`<button class="${F===x?'on':''}" onclick="F=F==='${x}'?'all':'${x}';render()"><i style="background:${COL[x]}"></i>${x}<span>${cur.filter(y=>y.tt===x).length}</span></button>`).join('');
