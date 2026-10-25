@@ -5,12 +5,12 @@
 const FOLDER_ID = 'DAN_ID_THU_MUC_DRIVE_LUU_ANH';
 
 // Các cột theo mẫu sheet "Phân hệ anten" (thêm vào sau các cột cũ để không ảnh hưởng dữ liệu đã có):
-//  loaihe=Loại hệ thống | loai=Loại vật tư | tenkt=Tên kỹ thuật | ten=Tên sử dụng | sl=Đơn vị tính/Số lượng
+//  stt=Số thứ tự (cột đầu của sheet mẫu, tiêu đề trong sheet ghi "Loại hệ thống") | loai=Loại vật tư | tenkt=Tên kỹ thuật | ten=Tên sử dụng | sl=Đơn vị tính/Số lượng
 //  sn=Serial Number | pn=Part Number | hang=Hãng sản xuất | xuatxu=Xuất xứ | nam=Năm sản xuất | hethong=Hệ thống
 //  tinhtrang=Tình trạng vật tư | nhomtb=Phân nhóm thiết bị | diadiem=Địa điểm | donvi=Đơn vị quản lý
 //  taisan=Tài sản vật tư dự phòng | nguyengia=Nguyên giá | ghichu=Thông tin bổ sung
 // Các cột riêng của web: nhom=nhóm hệ thống (menu) | tu=phân hệ/tủ (tab) | tt=tình trạng hoạt động (Tốt/Cảnh báo/Hư hỏng/Đang sửa chữa)
-const MAU = 'loaihe,loai,tenkt,hang,xuatxu,nam,hethong,tinhtrang,nhomtb,diadiem,donvi,taisan,nguyengia';
+const MAU = 'stt,loai,tenkt,hang,xuatxu,nam,hethong,tinhtrang,nhomtb,diadiem,donvi,taisan,nguyengia';
 const H = {
   equip: 'id,ten,sl,nhom,tt,sn,pn,anh,ghichu,capnhat,nguoi,tu,' + MAU,
   spare: 'id,ten,sl,nhom,tt,sn,pn,anh,anhtem,cauhinh,capnhat,nguoi,tu,ghichu,' + MAU,
@@ -111,20 +111,17 @@ function doPost(e) {
 
 // Chạy 1 LẦN sau khi dán code mới (chạy lại nhiều lần vẫn an toàn): thêm các cột của mẫu "Phân hệ anten" vào
 // sheet equip và spare, rồi điền giá trị mặc định cho các dòng cũ còn trống:
-//  - Loại hệ thống = "Radar PSR/SSR" (với hệ thống PSR/MSSR Easat EA29190)
 //  - Đơn vị quản lý = "Trung tâm KSKL Long Thành"
 //  - Tình trạng vật tư = "Đang sử dụng" (khối thiết bị) hoặc "Dự phòng" (vật tư dự phòng)
 function chuyenMau() {
-  const LH = { 'Hệ thống PSR/MSSR Easat EA29190': 'Radar PSR/SSR' }, DV = 'Trung tâm KSKL Long Thành';
+  const DV = 'Trung tâm KSKL Long Thành';
   ['equip', 'spare'].forEach(k => {
     const s = SS().getSheetByName(k), h = hdr(k), n = s.getLastRow();
     if (n < 2) return;
-    const nhom = s.getRange(2, h.indexOf('nhom') + 1, n - 1, 1).getValues().map(x => x[0]);
     const dien = (c, fn) => {
       const r = s.getRange(2, h.indexOf(c) + 1, n - 1, 1), v = r.getValues();
-      r.setValues(v.map((x, i) => [x[0] === '' ? fn(nhom[i]) : x[0]]));
+      r.setValues(v.map((x, i) => [x[0] === '' ? fn() : x[0]]));
     };
-    dien('loaihe', g => LH[g] || '');
     dien('donvi', () => DV);
     dien('tinhtrang', () => (k === 'spare' ? 'Dự phòng' : 'Đang sử dụng'));
   });

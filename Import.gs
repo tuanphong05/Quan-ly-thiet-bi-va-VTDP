@@ -17,7 +17,7 @@ const NHAP = {
 
 // tên tiêu đề (viết thường, bỏ dấu) -> trường dữ liệu
 const BO_COT = {
-  'loai he thong': 'loaihe', 'loai vat tu': 'loai', 'ten ky thuat': 'tenkt', 'ten su dung': 'ten',
+  'loai he thong': 'stt', 'stt': 'stt', 'so thu tu': 'stt', 'loai vat tu': 'loai', 'ten ky thuat': 'tenkt', 'ten su dung': 'ten',
   'don vi tinh/so luong': 'sl', 'dvt/so luong': 'sl', 'so luong': 'sl',
   'serial': 'sn', 'serial number': 'sn', 's/n': 'sn', 'p/n': 'pn', 'part number': 'pn',
   'hang san xuat': 'hang', 'xuat xu': 'xuatxu', 'nam san xuat': 'nam', 'he thong': 'hethong',
@@ -51,24 +51,24 @@ function nhapTheoMau() {
   if (hr < 0) throw Error('Không thấy dòng tiêu đề theo mẫu (Loại vật tư, Tên sử dụng, Serial Number...)');
 
   const dst = SS().getSheetByName(NHAP.DICH), h = hdr(NHAP.DICH);
+  const SO = /^[\d.,]+$/;   // số thứ tự dạng 1, 2, 5,1, 5.2
   const kh = x => [x.nhom, x.tu, x.loai, x.tenkt, x.ten, x.pn, x.sn].map(t => String(t || '').trim()).join('|');
   const have = new Map();   // khóa -> số dòng giống hệt đã có: chạy lại không bị nhân đôi
   rd(NHAP.DICH).forEach(x => { const k = kh(x); have.set(k, (have.get(k) || 0) + 1); });
 
   const get = (r, k) => (col[k] === undefined ? '' : String(v[r][col[k]] || '').trim());
-  const out = []; let loaiHe = '', phanHe = '';
+  const out = []; let phanHe = '';
   for (let i = hr + 1; i < raw.length; i++) {
     const co = raw[i].map((t, j) => [String(t || '').trim(), j]).filter(x => x[0]);
     if (!co.length) continue;
-    if (co.length === 1 && !/^\d+$/.test(co[0][0])) {          // dòng nhóm
-      if (co[0][1] === col.loaihe) { loaiHe = co[0][0]; phanHe = ''; } else phanHe = co[0][0];
+    if (co.length === 1 && !SO.test(co[0][0])) {          // dòng nhóm
+      if (co[0][1] === col.stt) phanHe = ''; else phanHe = co[0][0];   // ô chữ ở cột đầu = tên loại hệ thống (bỏ qua)
       continue;
     }
     const ten = get(i, 'ten') || get(i, 'tenkt') || get(i, 'loai');
     if (!ten) continue;
-    const a = get(i, 'loaihe');                                 // cột A của dòng vật tư thường chứa số thứ tự
     const o = {
-      loaihe: a && !/^\d+$/.test(a) ? a : loaiHe, loai: get(i, 'loai'), tenkt: get(i, 'tenkt'), ten,
+      stt: get(i, 'stt'), loai: get(i, 'loai'), tenkt: get(i, 'tenkt'), ten,
       sl: get(i, 'sl') || '1', sn: get(i, 'sn'), pn: get(i, 'pn'), hang: get(i, 'hang'), xuatxu: get(i, 'xuatxu'),
       nam: get(i, 'nam'), hethong: get(i, 'hethong'),
       tinhtrang: get(i, 'tinhtrang') || (NHAP.DICH === 'spare' ? 'Dự phòng' : 'Đang sử dụng'),
