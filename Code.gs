@@ -1,10 +1,19 @@
 // === QUẢN LÝ THIẾT BỊ & VẬT TƯ DỰ PHÒNG - LTH ===
 // Dán vào Apps Script của Google Sheets, chạy setup() 1 lần, rồi Deploy > Web app
 // (Execute as: Me, Who has access: Anyone).
+// LƯU Ý khi dán đè code mới: điền lại FOLDER_ID (thư mục Drive lưu ảnh) ở dòng dưới.
 const FOLDER_ID = 'DAN_ID_THU_MUC_DRIVE_LUU_ANH';
+
+// Các cột theo mẫu sheet "Phân hệ anten" (thêm vào sau các cột cũ để không ảnh hưởng dữ liệu đã có):
+//  loaihe=Loại hệ thống | loai=Loại vật tư | tenkt=Tên kỹ thuật | ten=Tên sử dụng | sl=Đơn vị tính/Số lượng
+//  sn=Serial Number | pn=Part Number | hang=Hãng sản xuất | xuatxu=Xuất xứ | nam=Năm sản xuất | hethong=Hệ thống
+//  tinhtrang=Tình trạng vật tư | nhomtb=Phân nhóm thiết bị | diadiem=Địa điểm | donvi=Đơn vị quản lý
+//  taisan=Tài sản vật tư dự phòng | nguyengia=Nguyên giá | ghichu=Thông tin bổ sung
+// Các cột riêng của web: nhom=nhóm hệ thống (menu) | tu=phân hệ/tủ (tab) | tt=tình trạng hoạt động (Tốt/Cảnh báo/Hư hỏng/Đang sửa chữa)
+const MAU = 'loaihe,loai,tenkt,hang,xuatxu,nam,hethong,tinhtrang,nhomtb,diadiem,donvi,taisan,nguyengia';
 const H = {
-  equip: 'id,ten,sl,nhom,tt,sn,pn,anh,ghichu,capnhat,nguoi,tu',
-  spare: 'id,ten,sl,nhom,tt,sn,pn,anh,anhtem,cauhinh,capnhat,nguoi,tu,ghichu',
+  equip: 'id,ten,sl,nhom,tt,sn,pn,anh,ghichu,capnhat,nguoi,tu,' + MAU,
+  spare: 'id,ten,sl,nhom,tt,sn,pn,anh,anhtem,cauhinh,capnhat,nguoi,tu,ghichu,' + MAU,
   fail: 'id,equipId,ngay,mota,nguyennhan,khacphuc,nguoi',
   cfg: 'id,spareId,ngay,nguoi,noidung',
   swap: 'id,ngay,nguoi,equipId,spareId,sl,ghichu',
@@ -14,13 +23,25 @@ const today = () => Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd');
 const nid = () => Utilities.getUuid().slice(0, 8);
 const SS = () => SpreadsheetApp.getActive();
 
+// Đọc dòng tiêu đề thật của sheet; tự thêm các cột còn thiếu (định dạng văn bản để giữ nguyên số 0 đầu của Serial).
+function hdr(k) {
+  const s = SS().getSheetByName(k) || SS().insertSheet(k);
+  const h = s.getLastColumn() ? s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0].map(String) : [];
+  H[k].split(',').forEach(c => {
+    if (h.indexOf(c) >= 0) return;
+    h.push(c);
+    const col = h.length;
+    if (col > s.getMaxColumns()) s.insertColumnsAfter(s.getMaxColumns(), col - s.getMaxColumns());
+    s.getRange(1, col, s.getMaxRows(), 1).setNumberFormat('@');
+    s.getRange(1, col).setValue(c).setFontWeight('bold');
+  });
+  return h;
+}
 function setup() {
   for (const k in H) {
     const s = SS().getSheetByName(k) || SS().insertSheet(k);
-    if (s.getLastRow()) continue;
-    const h = H[k].split(',');
-    s.getRange('A:Z').setNumberFormat('@');
-    s.getRange(1, 1, 1, h.length).setValues([h]).setFontWeight('bold');
+    if (!s.getLastRow()) s.getRange(1, 1, s.getMaxRows(), s.getMaxColumns()).setNumberFormat('@');
+    hdr(k);
   }
   const u = SS().getSheetByName('users');
   if (u.getLastRow() < 2) u.appendRow(['admin', '123456', 'quantri', 'Quản trị']); // role: quantri | xem
@@ -31,7 +52,7 @@ function rd(k) {
     [c, r[i] instanceof Date ? Utilities.formatDate(r[i], 'GMT+7', 'yyyy-MM-dd') : r[i]])));
 }
 function wr(k, o) {
-  const s = SS().getSheetByName(k), h = H[k].split(','), n = s.getLastRow();
+  const s = SS().getSheetByName(k), h = hdr(k), n = s.getLastRow();
   const ids = n > 1 ? s.getRange(2, 1, n - 1, 1).getValues().flat().map(String) : [];
   const i = ids.indexOf(String(o.id)), a = h.map(c => o[c] ?? '');
   i < 0 ? s.appendRow(a) : s.getRange(i + 2, 1, 1, h.length).setValues([a]);
@@ -43,6 +64,7 @@ function rm(k, id) {
   if (i >= 0) s.deleteRow(i + 2);
 }
 const all = () => ({ equip: rd('equip'), spare: rd('spare'), fail: rd('fail'), cfg: rd('cfg'), swap: rd('swap') });
+const soLuong = v => parseFloat(String(v ?? '').replace(',', '.')) || 0;   // "2 bộ" -> 2
 
 function doPost(e) {
   let r;
@@ -70,9 +92,10 @@ function doPost(e) {
         wr(q.t, o); r = all();
       } else if (q.a === 'del') { rm(q.t, q.id); r = all(); }
       else if (q.a === 'swap') {
-        const o = q.row, sl = Number(o.sl), sp = rd('spare').find(x => x.id == o.spareId);
-        if (!sp || sl < 1 || sl > Number(sp.sl)) throw Error('Không đủ số lượng vật tư dự phòng');
-        sp.sl = Number(sp.sl) - sl; sp.capnhat = today(); sp.nguoi = us.ten; wr('spare', sp);
+        const o = q.row, sl = Number(o.sl), sp = rd('spare').find(x => x.id == o.spareId), co = sp ? soLuong(sp.sl) : 0;
+        if (!sp || !(sl >= 1) || sl > co) throw Error('Không đủ số lượng vật tư dự phòng');
+        const dv = String(sp.sl).replace(/^[\s\d.,]+/, '').trim();   // giữ nguyên đơn vị tính nếu có
+        sp.sl = (co - sl) + (dv ? ' ' + dv : ''); sp.capnhat = today(); sp.nguoi = us.ten; wr('spare', sp);
         wr('swap', { id: nid(), ngay: today(), nguoi: us.ten, equipId: o.equipId, spareId: o.spareId, sl, ghichu: o.ghichu });
         r = all();
       } else if (q.a === 'up') {
@@ -86,19 +109,24 @@ function doPost(e) {
   return ContentService.createTextOutput(JSON.stringify(r)).setMimeType(ContentService.MimeType.JSON);
 }
 
-// Chạy 1 LẦN sau khi dán code mới (chạy lại nhiều lần vẫn an toàn): thêm cột còn thiếu
-// ("tu" cho equip và spare, "ghichu" cho spare) và gán các dòng cũ của hệ thống
-// PSR/MSSR Easat EA29190 vào "Tủ ACU" nếu chưa có tủ.
-function nangCap() {
-  const HT = 'Hệ thống PSR/MSSR Easat EA29190', TU_CU = 'Tủ ACU';
-  const can = { equip: ['tu'], spare: ['tu', 'ghichu'] };
-  for (const k in can) {
-    const s = SS().getSheetByName(k), h = s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0];
-    can[k].forEach(c => { if (h.indexOf(c) < 0) { s.getRange(1, h.length + 1).setValue(c).setFontWeight('bold'); h.push(c); } });
-    const n = s.getLastRow(); if (n < 2) continue;
-    const cN = h.indexOf('nhom') + 1, cT = h.indexOf('tu') + 1;
-    const nh = s.getRange(2, cN, n - 1, 1).getValues(), r = s.getRange(2, cT, n - 1, 1), tu = r.getValues();
-    r.setNumberFormat('@').setValues(tu.map((x, i) => [x[0] || (nh[i][0] === HT ? TU_CU : '')]));
-  }
-  Logger.log('Đã nâng cấp xong.');
+// Chạy 1 LẦN sau khi dán code mới (chạy lại nhiều lần vẫn an toàn): thêm các cột của mẫu "Phân hệ anten" vào
+// sheet equip và spare, rồi điền giá trị mặc định cho các dòng cũ còn trống:
+//  - Loại hệ thống = "Radar PSR/SSR" (với hệ thống PSR/MSSR Easat EA29190)
+//  - Đơn vị quản lý = "Trung tâm KSKL Long Thành"
+//  - Tình trạng vật tư = "Đang sử dụng" (khối thiết bị) hoặc "Dự phòng" (vật tư dự phòng)
+function chuyenMau() {
+  const LH = { 'Hệ thống PSR/MSSR Easat EA29190': 'Radar PSR/SSR' }, DV = 'Trung tâm KSKL Long Thành';
+  ['equip', 'spare'].forEach(k => {
+    const s = SS().getSheetByName(k), h = hdr(k), n = s.getLastRow();
+    if (n < 2) return;
+    const nhom = s.getRange(2, h.indexOf('nhom') + 1, n - 1, 1).getValues().map(x => x[0]);
+    const dien = (c, fn) => {
+      const r = s.getRange(2, h.indexOf(c) + 1, n - 1, 1), v = r.getValues();
+      r.setValues(v.map((x, i) => [x[0] === '' ? fn(nhom[i]) : x[0]]));
+    };
+    dien('loaihe', g => LH[g] || '');
+    dien('donvi', () => DV);
+    dien('tinhtrang', () => (k === 'spare' ? 'Dự phòng' : 'Đang sử dụng'));
+  });
+  Logger.log('Đã chuyển sang mẫu mới.');
 }
