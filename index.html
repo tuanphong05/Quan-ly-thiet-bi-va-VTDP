@@ -113,7 +113,7 @@ body.nvo .nav{transform:none}body.nvo .ov{display:block;position:fixed;inset:56p
 <div class="shell">
 <div class="nav"><div class="nu"><span id="un">-</span><small id="ur"></small></div>
 <div class="na"><button class="btn btn-o btn-s" style="width:100%" onclick="location.reload()">Đăng xuất</button></div>
-<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 26/10/2026 11:50</div></div>
+<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 26/10/2026 14:40</div></div>
 <div class="main" id="main"></div></div>
 <div class="mo hidden" id="mo"><div class="mb" id="mbx"><h3 id="mt"></h3><div id="mbody"></div><div id="er"></div>
 <div class="r"><button class="btn btn-o" onclick="cm()">Đóng</button><button class="btn" id="ok">Lưu</button></div></div></div>
@@ -240,9 +240,20 @@ function addFail(eid){mdl('Ghi nhận sự cố',`<label>Khối thiết bị / V
  if(!$('x1').value||!$('x3').value)throw new Error('Chọn khối thiết bị và nhập mô tả');
  D=await api('save',{t:'fail',row:{equipId:$('x1').value,ngay:$('x2').value,mota:$('x3').value,nguyennhan:$('x4').value,anhhuong:$('x6').value,khacphuc:$('x5').value}});render();toast('Đã ghi nhận');if(eid){nk(eid);return false}return true})}
 
+function swD(id){const s=D.swap.find(x=>x.id==id);if(!s)return;const e=fnd(s.equipId)||{},sp=D.spare.find(x=>x.id==s.spareId)||{},cu=s.snCu!==undefined&&(s.snCu||s.pnCu||s.snMoi||s.pnMoi),a=adm();
+ const r=(k,v)=>`<tr><td style="width:44%;color:#667;font-weight:600">${k}</td><td>${v?E(v):'<span class="mu">—</span>'}</td></tr>`;
+ mdl('Chi tiết thay thế',`<table style="width:100%;margin-bottom:10px">
+ ${r('Khối thiết bị bị thay',nm(e)||s.equipId)}${r('Serial Number thiết bị bị tháo ra',cu?s.snCu:'(bản ghi cũ, chưa lưu)')}${r('Part Number thiết bị bị tháo ra',cu?s.pnCu:'(bản ghi cũ, chưa lưu)')}
+ ${r('Vật tư dự phòng sử dụng',nm(sp)||s.spareId)}${r('Serial Number vật tư lắp vào',cu?s.snMoi:'(bản ghi cũ, chưa lưu)')}${r('Part Number vật tư lắp vào',cu?s.pnMoi:'(bản ghi cũ, chưa lưu)')}
+ ${r('Số lượng',String(s.sl||''))}${r('Người ghi nhận',s.nguoi)}${r('Ngày ghi nhận',s.ngay)}</table>
+ <label>Thời gian thay thế</label><input type="datetime-local" id="y1" value="${E(String(s.thoigian||'').replace(' ','T').slice(0,16))}"${a?'':' disabled'}>
+ <label>Người thay thế</label><select id="y2"${a?'':' disabled'}><option value="">—</option>${NTH.map(x=>`<option${x===s.nguoitt?' selected':''}>${x}</option>`).join('')}</select>
+ <label>Tình trạng hoạt động sau thay thế</label><select id="y3"${a?'':' disabled'}><option value="">—</option>${ST.map(x=>`<option${x===s.ttsau?' selected':''}>${x}</option>`).join('')}</select>
+ <label>Ghi chú</label><input id="y4" value="${E(s.ghichu||'')}"${a?'':' disabled'}>`,a?async()=>{
+ D=await api('swapedit',{row:{id:s.id,thoigian:$('y1').value.replace('T',' '),nguoitt:$('y2').value,ttsau:$('y3').value,ghichu:$('y4').value}});render();toast('Đã cập nhật bản ghi thay thế');return true}:null)}
 const nowL=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
 function swapV(){return head('Thay thế bằng vật tư dự phòng'+(G==='all'?'':' - '+E(G)),adm()?'<button class="btn" onclick="addSwap()">+ Ghi nhận thay thế</button>':'')+
- `<div class="tw"><table><thead><tr><th>Thời gian thay thế</th><th>Người thay thế</th><th>Khối thiết bị bị thay</th><th>Vật tư dự phòng sử dụng</th><th>Số lượng</th><th>Tình trạng hoạt động sau thay thế</th><th>Ghi chú</th><th>Người ghi</th></tr></thead><tbody>${D.swap.filter(s=>inG(s.equipId)).sort((a,b)=>String(b.thoigian||b.ngay).localeCompare(String(a.thoigian||a.ngay))).map(s=>`<tr><td>${E(s.thoigian||s.ngay)}</td><td>${E(s.nguoitt)}</td><td>${E(nmE(s.equipId))}</td><td>${E(nmS(s.spareId))}</td><td class="c">${E(s.sl)}</td><td class="c">${s.ttsau?chip(s.ttsau):''}</td><td>${E(s.ghichu)}</td><td>${E(s.nguoi)}</td></tr>`).join('')||'<tr><td colspan="8" class="mu">Chưa có bản ghi.</td></tr>'}</tbody></table></div>`}
+ `<div class="tw"><table><thead><tr><th>Thời gian thay thế</th><th>Người thay thế</th><th>Khối thiết bị bị thay</th><th>Vật tư dự phòng sử dụng</th><th>Số lượng</th><th>Tình trạng hoạt động sau thay thế</th><th>Ghi chú</th><th>Người ghi</th></tr></thead><tbody>${D.swap.filter(s=>inG(s.equipId)).sort((a,b)=>String(b.thoigian||b.ngay).localeCompare(String(a.thoigian||a.ngay))).map(s=>`<tr style="cursor:pointer" title="Nhấn để xem chi tiết" onclick="swD('${s.id}')"><td>${E(s.thoigian||s.ngay)}</td><td>${E(s.nguoitt)}</td><td>${E(nmE(s.equipId))}</td><td>${E(nmS(s.spareId))}</td><td class="c">${E(s.sl)}</td><td class="c">${s.ttsau?chip(s.ttsau):''}</td><td>${E(s.ghichu)}</td><td>${E(s.nguoi)}</td></tr>`).join('')||'<tr><td colspan="8" class="mu">Chưa có bản ghi.</td></tr>'}</tbody></table></div>`}
 function addSwap(){mdl('Ghi nhận thay thế',`<label>Khối thiết bị bị thay</label><select id="x1">${opt(D.equip)}</select><label>Vật tư dự phòng sử dụng</label><select id="x2">${opt(D.spare.filter(s=>slN(s.sl)>0))}</select><label>Số lượng</label><input type="number" id="x3" value="1" min="1"><label>Thời gian thay thế</label><input type="datetime-local" id="x5" value="${nowL()}"><label>Người thay thế</label><select id="x6">${NTH.map(x=>`<option>${x}</option>`).join('')}</select><label>Tình trạng hoạt động sau thay thế</label><select id="x7">${ST.map(x=>`<option>${x}</option>`).join('')}</select><label>Ghi chú</label><input id="x4">`,async()=>{
  if(!$('x1').value||!$('x2').value)throw new Error('Chọn khối thiết bị và vật tư dự phòng');
  if(!$('x5').value)throw new Error('Nhập thời gian thay thế');

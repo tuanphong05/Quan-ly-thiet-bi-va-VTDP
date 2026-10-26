@@ -17,7 +17,7 @@ const H = {
   fail: 'id,equipId,ngay,mota,nguyennhan,khacphuc,nguoi,ngaykp,anhhuong',
   log: 'id,equipId,ngay,loai,noidung,thuchien,ketqua,tiep,nguoi,capnhat,xacnhan,xnnguoi',   // nhật ký bảo trì, bảo dưỡng của từng thiết bị
   cfg: 'id,spareId,ngay,nguoi,noidung',
-  swap: 'id,ngay,nguoi,equipId,spareId,sl,ghichu,thoigian,nguoitt,ttsau',
+  swap: 'id,ngay,nguoi,equipId,spareId,sl,ghichu,thoigian,nguoitt,ttsau,snCu,pnCu,snMoi,pnMoi',
   users: 'user,pass,role,ten'
 };
 const today = () => Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd');
@@ -104,10 +104,32 @@ function doPost(e) {
         const o = q.row, sl = Number(o.sl), sp = rd('spare').find(x => x.id == o.spareId), co = sp ? soLuong(sp.sl) : 0;
         if (!sp || !(sl >= 1) || sl > co) throw Error('Không đủ số lượng vật tư dự phòng');
         const dv = String(sp.sl).replace(/^[\s\d.,]+/, '').trim();   // giữ nguyên đơn vị tính nếu có
-        sp.sl = (co - sl) + (dv ? ' ' + dv : ''); sp.capnhat = today(); sp.nguoi = us.ten; wr('spare', sp);
+        let shE = 'equip', e = rd('equip').find(x => x.id == o.equipId);
+        if (!e) { shE = 'spare'; e = rd('spare').find(x => x.id == o.equipId); }
+        if (!e) throw Error('Không tìm thấy khối thiết bị bị thay');
+        const snCu = e.sn || '', pnCu = e.pn || '', snMoi = sp.sn || '', pnMoi = sp.pn || '';
+        // 1) Khối thiết bị: mang Serial Number / Part Number của vật tư dự phòng vừa lắp vào
+        e.sn = snMoi; e.pn = pnMoi; e.capnhat = today(); e.nguoi = us.ten; wr(shE, e);
+        // 2) Vật tư dự phòng: thiết bị bị tháo ra được chuyển vào danh sách vật tư (chờ sửa chữa)
+        const tho = Object.assign({}, sp, { sn: snCu, pn: pnCu, tt: 'Thiết bị gặp sự cố', capnhat: today(), nguoi: us.ten,
+          ghichu: 'Tháo ra khi thay thế ' + (e.ten || '') + ' ngày ' + today() });
+        if (co === sl) { tho.id = sp.id; tho.sl = sp.sl; wr('spare', tho); }
+        else {
+          sp.sl = (co - sl) + (dv ? ' ' + dv : ''); sp.capnhat = today(); sp.nguoi = us.ten; wr('spare', sp);
+          tho.id = nid(); tho.sl = sl + (dv ? ' ' + dv : ''); wr('spare', tho);
+        }
         wr('swap', { id: nid(), ngay: today(), nguoi: us.ten, equipId: o.equipId, spareId: o.spareId, sl, ghichu: o.ghichu,
-          thoigian: o.thoigian, nguoitt: o.nguoitt, ttsau: o.ttsau });
+          thoigian: o.thoigian, nguoitt: o.nguoitt, ttsau: o.ttsau, snCu, pnCu, snMoi, pnMoi });
         if (['Tốt', 'Thiết bị gặp sự cố', 'Đang sửa chữa'].indexOf(o.ttsau) >= 0) capNhatSauThay(o.equipId, o.ttsau, sp.ten, us);
+        r = all();
+      } else if (q.a === 'swapedit') {
+        const o = q.row, s = rd('swap').find(x => x.id == o.id);
+        if (!s) throw Error('Không tìm thấy bản ghi thay thế');
+        s.thoigian = o.thoigian; s.nguoitt = o.nguoitt; s.ttsau = o.ttsau; s.ghichu = o.ghichu; wr('swap', s);
+        if (['Tốt', 'Thiết bị gặp sự cố', 'Đang sửa chữa'].indexOf(o.ttsau) >= 0) {
+          const sp = rd('spare').find(x => x.id == s.spareId);
+          capNhatSauThay(s.equipId, o.ttsau, (sp && sp.ten) || '', us);
+        }
         r = all();
       } else if (q.a === 'up') {
         const f = DriveApp.getFolderById(FOLDER_ID).createFile(
