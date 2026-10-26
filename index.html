@@ -113,7 +113,7 @@ body.nvo .nav{transform:none}body.nvo .ov{display:block;position:fixed;inset:56p
 <div class="shell">
 <div class="nav"><div class="nu"><span id="un">-</span><small id="ur"></small></div>
 <div class="na"><button class="btn btn-o btn-s" style="width:100%" onclick="location.reload()">Đăng xuất</button></div>
-<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 26/10/2026 10:45</div></div>
+<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 26/10/2026 10:55</div></div>
 <div class="main" id="main"></div></div>
 <div class="mo hidden" id="mo"><div class="mb" id="mbx"><h3 id="mt"></h3><div id="mbody"></div><div id="er"></div>
 <div class="r"><button class="btn btn-o" onclick="cm()">Đóng</button><button class="btn" id="ok">Lưu</button></div></div></div>
@@ -246,6 +246,7 @@ function addSwap(){mdl('Ghi nhận thay thế',`<label>Khối thiết bị bị 
  D=await api('swap',{row:{equipId:$('x1').value,spareId:$('x2').value,sl:$('x3').value,ghichu:$('x4').value}});render();toast('Đã ghi nhận, số lượng vật tư dự phòng đã cập nhật');return true})}
 
 // ===== NHẬT KÝ BẢO TRÌ, BẢO DƯỠNG =====
+const NTH=['Nhân viên kỹ thuật','Kíp trưởng','Phụ trách kíp','Hỗ trợ kỹ thuật'];
 const LNK=['Bảo dưỡng định kỳ','Sửa chữa','Kiểm tra','Hiệu chuẩn','Khác'],LG=()=>D.log||[];
 const cl=d=>String(d||'').localeCompare('');
 const dd=d=>Math.round((Date.parse(d)-Date.parse(today()))/864e5);
@@ -267,7 +268,7 @@ function addLog(eid,pre){mdl('Ghi nhật ký bảo dưỡng - '+nmE(eid),`<div c
  <div class="fc"><label>Loại công việc</label><select id="l2" onchange="$('lx').style.display=this.value==='Sửa chữa'?'':'none';$('lt').style.display=this.value==='Bảo dưỡng định kỳ'?'':'none'">${LNK.map(x=>`<option ${x===pre?'selected':''}>${x}</option>`).join('')}</select></div>
  <div class="fc s2" id="lx" style="display:${pre==='Sửa chữa'?'':'none'}"><label class="ck"><input type="checkbox" id="l7"> Đã sửa chữa xong, xác nhận thiết bị đã được khắc phục</label><div class="mu">Nếu chưa tích, thiết bị chuyển sang trạng thái Đang sửa chữa cho đến khi bạn xác nhận khắc phục.</div></div>
  <div class="fc s2"><label>Nội dung thực hiện</label><textarea id="l3" rows="3"></textarea></div>
- <div class="fc"><label>Người thực hiện</label><input id="l4" value="${E(U.ten)}"></div><div class="fc"><label>Kết quả</label><input id="l5" placeholder="VD: Hoạt động bình thường"></div>
+ <div class="fc"><label>Người thực hiện</label><select id="l4">${NTH.map(x=>`<option>${x}</option>`).join('')}</select></div><div class="fc"><label>Kết quả</label><input id="l5" placeholder="VD: Hoạt động bình thường"></div>
  <div class="fc" id="lt" style="display:${!pre||pre==='Bảo dưỡng định kỳ'?'':'none'}"><label>Ngày bảo dưỡng tiếp theo</label><input type="date" id="l6"></div></div>`,async()=>{
  if(!$('l1').value||!$('l3').value)throw new Error('Nhập ngày và nội dung thực hiện');
  D=await api('save',{t:'log',row:{equipId:eid,ngay:$('l1').value,loai:$('l2').value,noidung:$('l3').value,thuchien:$('l4').value,ketqua:$('l5').value,tiep:$('l2').value==='Bảo dưỡng định kỳ'?$('l6').value:'',xong:$('l2').value==='Sửa chữa'&&$('l7').checked}});render();toast('Đã ghi nhật ký');nk(eid);return false},true)}
