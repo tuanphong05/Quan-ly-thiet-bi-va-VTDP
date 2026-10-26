@@ -113,7 +113,7 @@ body.nvo .nav{transform:none}body.nvo .ov{display:block;position:fixed;inset:56p
 <div class="shell">
 <div class="nav"><div class="nu"><span id="un">-</span><small id="ur"></small></div>
 <div class="na"><button class="btn btn-o btn-s" style="width:100%" onclick="location.reload()">Đăng xuất</button></div>
-<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 26/10/2026 10:55</div></div>
+<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 26/10/2026 11:15</div></div>
 <div class="main" id="main"></div></div>
 <div class="mo hidden" id="mo"><div class="mb" id="mbx"><h3 id="mt"></h3><div id="mbody"></div><div id="er"></div>
 <div class="r"><button class="btn btn-o" onclick="cm()">Đóng</button><button class="btn" id="ok">Lưu</button></div></div></div>
@@ -138,7 +138,8 @@ const MENU=[['equip','Khối thiết bị'],['spare','Vật tư dự phòng'],['
 let TK='',U={},D={equip:[],spare:[],fail:[],cfg:[],swap:[],log:[]},V='',F='all',G='',S='',Y=new Date().getFullYear();
 const adm=()=>U.role==='quantri',today=()=>new Date().toISOString().slice(0,10);
 const th=id=>`https://drive.google.com/thumbnail?id=${id}&sz=w300`;
-const nmE=id=>nm(D.equip.find(x=>x.id==id)||{})||id,nmS=id=>nm(D.spare.find(x=>x.id==id)||{})||id;
+const fnd=id=>D.equip.find(x=>x.id==id)||D.spare.find(x=>x.id==id),dsTB=()=>[...D.equip,...D.spare.map(x=>({...x,_s:1}))];
+const nmE=id=>nm(fnd(id)||{})||id,nmS=id=>nm(D.spare.find(x=>x.id==id)||{})||id;
 let tt;function toast(m,er){const t=$('toast');t.textContent=m;t.className='toast'+(er?' er':'');clearTimeout(tt);tt=setTimeout(()=>t.textContent='',2800)}
 const fxS=o=>{(o.log||[]).forEach(l=>{if(l.loai==='Bảo trì')l.loai='Bảo dưỡng định kỳ'});return fxS0(o)};
 const fxS0=o=>['equip','spare'].forEach(k=>(o[k]||[]).forEach(x=>{x.stt=String(x.stt??'').replace(/,/g,'.');if(x.tt==='Hư hỏng'||x.tt==='Thiết bị đang sự cố')x.tt='Thiết bị gặp sự cố';if(x.tt==='Cảnh báo')x.tt='Tốt'}));   // số thứ tự dạng 5,1 -> 5.1
@@ -202,7 +203,7 @@ function fbar(t){const cb=CAB[G],base=D[t].filter(x=>x.nhom===G);SH=cb?cb.filter
  return `<div class="fbar">${tabs}<div class="frow"><div class="seg">${seg}</div><div class="fr2"><span class="mu" id="cnt"></span></div></div></div>`}
 const PR=new Set(['stt','ten','sl','sn','pn','tt','hh','cauhinh','act']),FZ={stt:[0,80],ten:[80,200]},zs=k=>FZ[k]?`left:${FZ[k][0]}px;min-width:${FZ[k][1]}px;width:${FZ[k][1]}px;max-width:${FZ[k][1]}px;`:'',zc=k=>FZ[k]?(k==='ten'?'fz e':'fz'):'';
 const CW={stt:80,loai:150,tenkt:190,ten:200,sl:90,sn:120,pn:120,hang:110,xuatxu:90,nam:80,hethong:150,tinhtrang:120,nhomtb:110,diadiem:130,donvi:170,taisan:130,nguyengia:100,ghichu:200};
-const cols=t=>[...[MAU[0],MAU.find(m=>m[0]==='ten'),...MAU.filter(m=>m[0]!=='stt'&&m[0]!=='ten')].map(([k,l])=>({k,l,w:CW[k]})),{k:'tt',l:'Tình trạng hoạt động',w:130},t==='equip'?{k:'hh',l:'Số lần sự cố',w:90}:{k:'cauhinh',l:'Tình trạng cấu hình',w:180},{k:'cn',l:'Cập nhật',w:130},{k:'act',l:'Thao tác',w:200}];
+const cols=t=>[...[MAU[0],MAU.find(m=>m[0]==='ten'),...MAU.filter(m=>m[0]!=='stt'&&m[0]!=='ten')].map(([k,l])=>({k,l,w:CW[k]})),{k:'tt',l:'Tình trạng hoạt động',w:130},{k:'hh',l:'Số lần sự cố',w:90},...(t==='spare'?[{k:'cauhinh',l:'Tình trạng cấu hình',w:180}]:[]),{k:'cn',l:'Cập nhật',w:130},{k:'act',l:'Thao tác',w:200}];
 function listV(t){
  return head((t==='equip'?'Khối thiết bị':'Vật tư dự phòng')+' - '+E(G)+(C?' - '+E(C):''),`<input placeholder="Tìm theo tên, Serial Number, Part Number, hãng sản xuất..." value="${E(S)}" oninput="S=this.value;rows()">
  ${adm()?`<button class="btn" onclick="ed('${t}')">+ Thêm</button>`:''}`)+
@@ -220,22 +221,22 @@ function rows(){const t=V,q=S.toLowerCase(),a=D[t].filter(x=>(F==='all'||x.tt===
  if(a==='hh')return W(`<td class="c"><b>${D.fail.filter(f=>f.equipId==x.id).length}</b></td>`);
  if(a==='cauhinh')return W(`<td>${E(x.cauhinh)}<div><a href="#" onclick="hist('${x.id}');return false">Lịch sử</a></div></td>`);
  if(a==='cn')return W(`<td class="mu">${E(x.capnhat)}<br>${E(x.nguoi)}</td>`);
- if(a==='act')return W(`<td class="stk">${t==='equip'?`<button class="btn btn-s" onclick="nk('${x.id}')">Nhật ký</button> `:''}${adm()?`<button class="btn btn-o btn-s" onclick="ed('${t}','${x.id}')">Sửa</button> <button class="btn btn-d btn-s" onclick="del('${t}','${x.id}')">Xóa</button>`:''}</td>`);
+ if(a==='act')return W(`<td class="stk"><button class="btn btn-s" onclick="nk('${x.id}')">Nhật ký</button> ${adm()?`<button class="btn btn-o btn-s" onclick="ed('${t}','${x.id}')">Sửa</button> <button class="btn btn-d btn-s" onclick="del('${t}','${x.id}')">Xóa</button>`:''}</td>`);
  return W(`<td class="${zc(a)} ${a==='sl'?'c':''}" style="${zs(a)}">${a==='ten'?'<b>'+E(x.ten||nm(x))+'</b>':E(x[a])}</td>`)}).join('')}</tr>`;
 let h='';
  h=a.map(x=>R(x)).join('');
  $('tb').innerHTML=h||'<tr><td colspan="'+cs.length+'" class="mu">Không có dữ liệu.</td></tr>'}
 const tgG=i=>{const k=GK[i];CG.has(k)?CG.delete(k):CG.add(k);rows()};
 
-const inG=id=>G==='all'||((D.equip.find(x=>x.id==id)||{}).nhom)===G;
+const inG=id=>G==='all'||((fnd(id)||{}).nhom)===G;
 function failV(){const ys=[...new Set([Y,...D.fail.map(f=>+String(f.ngay).slice(0,4)).filter(Boolean)])].sort(),m=[...Array(12).keys()],
- st=D.equip.filter(e=>G==='all'||e.nhom===G).map(e=>{const c=m.map(i=>D.fail.filter(f=>f.equipId==e.id&&String(f.ngay).startsWith(Y+'-'+String(i+1).padStart(2,'0'))).length);return{e,c,n:c.reduce((a,b)=>a+b,0)}}).filter(r=>r.n);
+ st=dsTB().filter(e=>G==='all'||e.nhom===G).map(e=>{const c=m.map(i=>D.fail.filter(f=>f.equipId==e.id&&String(f.ngay).startsWith(Y+'-'+String(i+1).padStart(2,'0'))).length);return{e,c,n:c.reduce((a,b)=>a+b,0)}}).filter(r=>r.n);
  return head('Theo dõi sự cố thiết bị'+(G==='all'?'':' - '+E(G)),`<select onchange="Y=+this.value;render()">${ys.map(y=>`<option ${y==Y?'selected':''}>${y}</option>`).join('')}</select>${adm()?'<button class="btn" onclick="addFail()">+ Ghi nhận sự cố</button>':''}`)+
  `<div class="tw"><table><thead><tr><th>Thống kê ${Y}</th>${m.map(i=>`<th>T${i+1}</th>`).join('')}<th>Cả năm</th></tr></thead><tbody>${st.map(r=>`<tr><td>${E(nm(r.e))}</td>${r.c.map(v=>`<td class="c">${v||''}</td>`).join('')}<td class="c"><b>${r.n}</b></td></tr>`).join('')||'<tr><td colspan="14" class="mu">Chưa có sự cố trong năm này.</td></tr>'}</tbody></table></div>
- <div class="tw"><table><thead><tr><th>Ngày</th><th>Khối thiết bị</th><th>Mô tả</th><th>Nguyên nhân</th><th>Đánh giá ảnh hưởng đến hệ thống</th><th>Cách khắc phục</th><th>Tình trạng</th><th>Người ghi</th><th></th></tr></thead><tbody>${D.fail.filter(f=>inG(f.equipId)).sort((a,b)=>b.ngay>a.ngay?1:-1).map(f=>`<tr><td>${E(f.ngay)}</td><td><b>${E(nmE(f.equipId))}</b></td><td>${E(f.mota)}</td><td>${E(f.nguyennhan)}</td><td>${E(f.anhhuong)}</td><td>${E(f.khacphuc)}</td><td class="c">${f.khacphuc&&String(f.khacphuc).trim()?'<span class="st" style="color:#1e7e4f">Đã khắc phục'+(f.ngaykp?' '+E(f.ngaykp):'')+'</span>':'<span class="st" style="color:#c0392b">Đang sự cố</span>'}</td><td>${E(f.nguoi)}</td><td>${adm()?`${f.khacphuc&&String(f.khacphuc).trim()?'':`<button class="btn btn-s" onclick="kp('${f.id}')">Cập nhật cách khắc phục</button> `}<button class="btn btn-d btn-s" onclick="del('fail','${f.id}')">Xóa</button>`:''}</td></tr>`).join('')||'<tr><td colspan="9" class="mu">Chưa có bản ghi.</td></tr>'}</tbody></table></div>`}
-const opt=(a,k)=>{const g=new Map();[...a].sort((p,q)=>(p.nhom===G?0:1)-(q.nhom===G?0:1)||cp(p.nhom,q.nhom)||cp(p.tu,q.tu)||cmpX(p,q)).forEach(x=>{const n=(x.tu||'Chưa phân tủ')+(x.nhom&&x.nhom!==G?' ('+x.nhom+')':'');if(!g.has(n))g.set(n,[]);g.get(n).push(x)});
+ <div class="tw"><table><thead><tr><th>Ngày</th><th>Khối thiết bị / Vật tư dự phòng</th><th>Mô tả</th><th>Nguyên nhân</th><th>Đánh giá ảnh hưởng đến hệ thống</th><th>Cách khắc phục</th><th>Tình trạng</th><th>Người ghi</th><th></th></tr></thead><tbody>${D.fail.filter(f=>inG(f.equipId)).sort((a,b)=>b.ngay>a.ngay?1:-1).map(f=>`<tr><td>${E(f.ngay)}</td><td><b>${E(nmE(f.equipId))}</b></td><td>${E(f.mota)}</td><td>${E(f.nguyennhan)}</td><td>${E(f.anhhuong)}</td><td>${E(f.khacphuc)}</td><td class="c">${f.khacphuc&&String(f.khacphuc).trim()?'<span class="st" style="color:#1e7e4f">Đã khắc phục'+(f.ngaykp?' '+E(f.ngaykp):'')+'</span>':'<span class="st" style="color:#c0392b">Đang sự cố</span>'}</td><td>${E(f.nguoi)}</td><td>${adm()?`${f.khacphuc&&String(f.khacphuc).trim()?'':`<button class="btn btn-s" onclick="kp('${f.id}')">Cập nhật cách khắc phục</button> `}<button class="btn btn-d btn-s" onclick="del('fail','${f.id}')">Xóa</button>`:''}</td></tr>`).join('')||'<tr><td colspan="9" class="mu">Chưa có bản ghi.</td></tr>'}</tbody></table></div>`}
+const opt=(a,k)=>{const g=new Map();[...a].sort((p,q)=>(p.nhom===G?0:1)-(q.nhom===G?0:1)||cp(p.nhom,q.nhom)||(p._s?1:0)-(q._s?1:0)||cp(p.tu,q.tu)||cmpX(p,q)).forEach(x=>{const n=(x._s?'Vật tư dự phòng - ':'')+(x.tu||'Chưa phân tủ')+(x.nhom&&x.nhom!==G?' ('+x.nhom+')':'');if(!g.has(n))g.set(n,[]);g.get(n).push(x)});
  return [...g].map(([n,m])=>`<optgroup label="${E(n)}">${m.map(x=>`<option value="${x.id}"${x.id==k?' selected':''}>${x.stt?E(x.stt)+'. ':''}${E(nm(x))}${x.sn?' - '+E(x.sn):''}${x.pn?' - '+E(x.pn):''}</option>`).join('')}</optgroup>`).join('')};
-function addFail(eid){mdl('Ghi nhận sự cố',`<label>Khối thiết bị</label><select id="x1">${opt(D.equip,eid)}</select><label>Ngày</label><input type="date" id="x2" value="${today()}"><label>Mô tả sự cố</label><textarea id="x3" rows="2"></textarea><label>Nguyên nhân</label><input id="x4"><label>Đánh giá ảnh hưởng đến hệ thống</label><textarea id="x6" rows="2"></textarea><label>Cách khắc phục (để trống nếu chưa khắc phục xong)</label><input id="x5">`,async()=>{
+function addFail(eid){mdl('Ghi nhận sự cố',`<label>Khối thiết bị / Vật tư dự phòng</label><select id="x1">${opt(dsTB(),eid)}</select><label>Ngày</label><input type="date" id="x2" value="${today()}"><label>Mô tả sự cố</label><textarea id="x3" rows="2"></textarea><label>Nguyên nhân</label><input id="x4"><label>Đánh giá ảnh hưởng đến hệ thống</label><textarea id="x6" rows="2"></textarea><label>Cách khắc phục (để trống nếu chưa khắc phục xong)</label><input id="x5">`,async()=>{
  if(!$('x1').value||!$('x3').value)throw new Error('Chọn khối thiết bị và nhập mô tả');
  D=await api('save',{t:'fail',row:{equipId:$('x1').value,ngay:$('x2').value,mota:$('x3').value,nguyennhan:$('x4').value,anhhuong:$('x6').value,khacphuc:$('x5').value}});render();toast('Đã ghi nhận');if(eid){nk(eid);return false}return true})}
 
@@ -256,7 +257,7 @@ function bti(id){const L=LG().filter(l=>l.equipId==id).sort((a,b)=>String(b.ngay
  if(next&&!isNaN(Date.parse(next))){const n=dd(next);if(n<0){st='Quá hạn '+(-n)+' ngày';c='#c0392b';r=0}else if(n<=30){st='Sắp đến hạn ('+n+' ngày)';c='#b36200';r=1}else{st='Còn hạn';c='#1e7e4f';r=2}}
  return{L,last:last?last.ngay:'',next,st,c,r}}
 const stB=b=>`<span class="st" style="color:${b.c}">${E(b.st)}</span>`;
-function nk(id){const e=D.equip.find(x=>x.id==id)||{},b=bti(id);
+function nk(id){const e=fnd(id)||{},b=bti(id);
  const A=[...D.fail.filter(f=>f.equipId==id).map(f=>({k:'f',id:f.id,ngay:f.ngay,loai:'Sự cố',nd:f.mota,ex:[['Nguyên nhân',f.nguyennhan],['Đánh giá ảnh hưởng đến hệ thống',f.anhhuong],['Cách khắc phục',f.khacphuc],['Khắc phục ngày',f.ngaykp]],ng:f.nguoi,open:!String(f.khacphuc||'').trim()})),
  ...b.L.map(l=>({k:'l',id:l.id,ngay:l.ngay,loai:l.loai,nd:l.noidung,ex:[['Người thực hiện',l.thuchien],['Kết quả',l.ketqua],['Bảo dưỡng tiếp theo',l.tiep],['Xác nhận đã khắc phục',l.xacnhan?l.xacnhan+' - '+(l.xnnguoi||''):'']],ng:l.nguoi,rep:l.loai==='Sửa chữa'&&!String(l.xacnhan||'').trim()}))].sort((a,c)=>String(c.ngay).localeCompare(String(a.ngay)));
  mdl('Nhật ký - '+nm(e),`<div class="nks"><div><span>Serial Number</span>${E(e.sn)||'-'}</div><div><span>Part Number</span>${E(e.pn)||'-'}</div><div><span>Bảo dưỡng gần nhất</span>${E(b.last)||'-'}</div><div><span>Bảo dưỡng tiếp theo</span>${E(b.next)||'-'}</div><div><span>Tình trạng bảo dưỡng</span>${stB(b)}</div><div><span>Tình trạng thiết bị</span>${chip(e.tt)}</div><div><span>Số lần sự cố</span><b>${D.fail.filter(f=>f.equipId==id).length}</b></div></div>

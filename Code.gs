@@ -180,7 +180,8 @@ function doiTinhTrangSuCo() {
 //  - có sự cố CHƯA có "Cách khắc phục"               -> "Thiết bị gặp sự cố"
 //  - không còn gì đang mở                             -> trở lại "Tốt" (nếu đang là sự cố/hư hỏng/đang sửa chữa)
 function dongBoSuCo(eid, us) {
-  const e = rd('equip').find(x => x.id == eid);
+  let sh = 'equip', e = rd('equip').find(x => x.id == eid);
+  if (!e) { sh = 'spare'; e = rd('spare').find(x => x.id == eid); }   // vật tư dự phòng cũng có nhật ký sự cố
   if (!e) return;
   const DANG = 'Thiết bị gặp sự cố';
   const mo = rd('fail').filter(f => f.equipId == eid && !String(f.khacphuc || '').trim()).length;
@@ -189,7 +190,7 @@ function dongBoSuCo(eid, us) {
   if (sua > 0) tt = 'Đang sửa chữa';      // đang có lần sửa chữa chưa xác nhận khắc phục
   else if (mo > 0) tt = DANG;
   else if ([DANG, 'Thiết bị đang sự cố', 'Hư hỏng', 'Đang sửa chữa', 'Cảnh báo'].indexOf(e.tt) >= 0) tt = 'Tốt';
-  if (tt !== e.tt) { e.tt = tt; e.capnhat = today(); e.nguoi = us.ten; wr('equip', e); }
+  if (tt !== e.tt) { e.tt = tt; e.capnhat = today(); e.nguoi = us.ten; wr(sh, e); }
 }
 
 // Xử lý nhật ký loại "Sửa chữa": tick xác nhận khắc phục -> ghi ngày/người xác nhận và đóng các sự cố đang mở của thiết bị.
