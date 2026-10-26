@@ -17,7 +17,7 @@ const H = {
   fail: 'id,equipId,ngay,mota,nguyennhan,khacphuc,nguoi,ngaykp,anhhuong',
   log: 'id,equipId,ngay,loai,noidung,thuchien,ketqua,tiep,nguoi,capnhat,xacnhan,xnnguoi',   // nhật ký bảo trì, bảo dưỡng của từng thiết bị
   cfg: 'id,spareId,ngay,nguoi,noidung',
-  swap: 'id,ngay,nguoi,equipId,spareId,sl,ghichu,thoigian,nguoitt,ttsau,snCu,pnCu,snMoi,pnMoi',
+  swap: 'id,ngay,nguoi,equipId,spareId,sl,ghichu,thoigian,nguoitt,ttsau,snCu,pnCu,snMoi,pnMoi,thoId',
   users: 'user,pass,role,ten'
 };
 const today = () => Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd');
@@ -113,14 +113,36 @@ function doPost(e) {
         // 2) Vật tư dự phòng: thiết bị bị tháo ra được chuyển vào danh sách vật tư (chờ sửa chữa)
         const tho = Object.assign({}, sp, { sn: snCu, pn: pnCu, tt: 'Thiết bị gặp sự cố', capnhat: today(), nguoi: us.ten,
           ghichu: 'Tháo ra khi thay thế ' + (e.ten || '') + ' ngày ' + today() });
+        let thoId = sp.id;
         if (co === sl) { tho.id = sp.id; tho.sl = sp.sl; wr('spare', tho); }
         else {
           sp.sl = (co - sl) + (dv ? ' ' + dv : ''); sp.capnhat = today(); sp.nguoi = us.ten; wr('spare', sp);
-          tho.id = nid(); tho.sl = sl + (dv ? ' ' + dv : ''); wr('spare', tho);
+          tho.id = nid(); thoId = tho.id; tho.sl = sl + (dv ? ' ' + dv : ''); wr('spare', tho);
         }
         wr('swap', { id: nid(), ngay: today(), nguoi: us.ten, equipId: o.equipId, spareId: o.spareId, sl, ghichu: o.ghichu,
-          thoigian: o.thoigian, nguoitt: o.nguoitt, ttsau: o.ttsau, snCu, pnCu, snMoi, pnMoi });
+          thoigian: o.thoigian, nguoitt: o.nguoitt, ttsau: o.ttsau, snCu, pnCu, snMoi, pnMoi, thoId });
         if (['Tốt', 'Thiết bị gặp sự cố', 'Đang sửa chữa'].indexOf(o.ttsau) >= 0) capNhatSauThay(o.equipId, o.ttsau, sp.ten, us);
+        r = all();
+      } else if (q.a === 'swapdel') {
+        // Xóa bản ghi thay thế và hoàn trả: Serial/Part Number của khối thiết bị, số lượng vật tư dự phòng
+        const s = rd('swap').find(x => x.id == q.id);
+        if (!s) throw Error('Không tìm thấy bản ghi thay thế');
+        const sp = rd('spare').find(x => x.id == s.spareId), n = soLuong(s.sl) || 1;
+        const hasSnap = s.thoId !== undefined && String(s.thoId) !== '';
+        let e = rd('equip').find(x => x.id == s.equipId), shE = 'equip';
+        if (!e) { e = rd('spare').find(x => x.id == s.equipId); shE = 'spare'; }
+        if (hasSnap && e) { e.sn = s.snCu; e.pn = s.pnCu; e.capnhat = today(); e.nguoi = us.ten; wr(shE, e); }
+        if (hasSnap && String(s.thoId) !== String(s.spareId)) {
+          const t = rd('spare').find(x => x.id == s.thoId);
+          if (t) rm('spare', t.id);
+          const sp2 = rd('spare').find(x => x.id == s.spareId);
+          if (sp2) { const dv = String(sp2.sl).replace(/^[\s\d.,]+/, '').trim(); sp2.sl = (soLuong(sp2.sl) + n) + (dv ? ' ' + dv : ''); sp2.capnhat = today(); sp2.nguoi = us.ten; wr('spare', sp2); }
+        } else if (sp) {
+          if (hasSnap) { sp.sn = s.snMoi; sp.pn = s.pnMoi; sp.tt = 'Tốt'; }
+          else { const dv = String(sp.sl).replace(/^[\s\d.,]+/, '').trim(); sp.sl = (soLuong(sp.sl) + n) + (dv ? ' ' + dv : ''); }
+          sp.capnhat = today(); sp.nguoi = us.ten; wr('spare', sp);
+        }
+        rm('swap', s.id);
         r = all();
       } else if (q.a === 'swapedit') {
         const o = q.row, s = rd('swap').find(x => x.id == o.id);
