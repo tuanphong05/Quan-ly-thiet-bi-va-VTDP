@@ -9,7 +9,7 @@ const FOLDER_ID = 'DAN_ID_THU_MUC_DRIVE_LUU_ANH';
 //  sn=Serial Number | pn=Part Number | hang=Hãng sản xuất | xuatxu=Xuất xứ | nam=Năm sản xuất | hethong=Hệ thống
 //  tinhtrang=Tình trạng vật tư | nhomtb=Phân nhóm thiết bị | diadiem=Địa điểm | donvi=Đơn vị quản lý
 //  taisan=Tài sản vật tư dự phòng | nguyengia=Nguyên giá | ghichu=Thông tin bổ sung
-// Các cột riêng của web: nhom=nhóm hệ thống (menu) | tu=phân hệ/tủ (tab) | tt=tình trạng hoạt động (Tốt/Thiết bị đang sự cố/Đang sửa chữa)
+// Các cột riêng của web: nhom=nhóm hệ thống (menu) | tu=phân hệ/tủ (tab) | tt=tình trạng hoạt động (Tốt/Thiết bị gặp sự cố/Đang sửa chữa)
 const MAU = 'stt,loai,tenkt,hang,xuatxu,nam,hethong,tinhtrang,nhomtb,diadiem,donvi,taisan,nguyengia';
 const H = {
   equip: 'id,ten,sl,nhom,tt,sn,pn,anh,ghichu,capnhat,nguoi,tu,' + MAU,
@@ -163,32 +163,32 @@ function chuanHoaSTT() {
   Logger.log('Đã đổi dạng số thứ tự cho ' + n + ' dòng.');
 }
 
-// Chạy 1 LẦN: đổi tình trạng hoạt động "Hư hỏng" thành "Thiết bị đang sự cố" trong sheet equip và spare.
+// Chạy 1 LẦN: đổi tình trạng hoạt động "Hư hỏng" / "Thiết bị đang sự cố" thành "Thiết bị gặp sự cố" trong sheet equip và spare.
 function doiTinhTrangSuCo() {
   let n = 0;
   ['equip', 'spare'].forEach(k => {
     const s = SS().getSheetByName(k), h = hdr(k), r = s.getLastRow();
     if (r < 2) return;
     const g = s.getRange(2, h.indexOf('tt') + 1, r - 1, 1), v = g.getValues();
-    g.setValues(v.map(x => { if (String(x[0]).trim() === 'Hư hỏng') { n++; return ['Thiết bị đang sự cố']; } return x; }));
+    g.setValues(v.map(x => { if (['Hư hỏng', 'Thiết bị đang sự cố'].indexOf(String(x[0]).trim()) >= 0) { n++; return ['Thiết bị gặp sự cố']; } return x; }));
   });
   Logger.log('Đã đổi tình trạng cho ' + n + ' dòng.');
 }
 
 // Đồng bộ tình trạng hoạt động của thiết bị theo nhật ký (ưu tiên từ trên xuống):
 //  - có lần "Sửa chữa" CHƯA xác nhận khắc phục       -> "Đang sửa chữa"
-//  - có sự cố CHƯA có "Cách khắc phục"               -> "Thiết bị đang sự cố"
+//  - có sự cố CHƯA có "Cách khắc phục"               -> "Thiết bị gặp sự cố"
 //  - không còn gì đang mở                             -> trở lại "Tốt" (nếu đang là sự cố/hư hỏng/đang sửa chữa)
 function dongBoSuCo(eid, us) {
   const e = rd('equip').find(x => x.id == eid);
   if (!e) return;
-  const DANG = 'Thiết bị đang sự cố';
+  const DANG = 'Thiết bị gặp sự cố';
   const mo = rd('fail').filter(f => f.equipId == eid && !String(f.khacphuc || '').trim()).length;
   const sua = rd('log').filter(l => l.equipId == eid && l.loai === 'Sửa chữa' && !String(l.xacnhan || '').trim()).length;
   let tt = e.tt;
   if (sua > 0) tt = 'Đang sửa chữa';      // đang có lần sửa chữa chưa xác nhận khắc phục
   else if (mo > 0) tt = DANG;
-  else if ([DANG, 'Hư hỏng', 'Đang sửa chữa', 'Cảnh báo'].indexOf(e.tt) >= 0) tt = 'Tốt';
+  else if ([DANG, 'Thiết bị đang sự cố', 'Hư hỏng', 'Đang sửa chữa', 'Cảnh báo'].indexOf(e.tt) >= 0) tt = 'Tốt';
   if (tt !== e.tt) { e.tt = tt; e.capnhat = today(); e.nguoi = us.ten; wr('equip', e); }
 }
 

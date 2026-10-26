@@ -113,7 +113,7 @@ body.nvo .nav{transform:none}body.nvo .ov{display:block;position:fixed;inset:56p
 <div class="shell">
 <div class="nav"><div class="nu"><span id="un">-</span><small id="ur"></small></div>
 <div class="na"><button class="btn btn-o btn-s" style="width:100%" onclick="location.reload()">Đăng xuất</button></div>
-<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 25/10/2026 19:40</div></div>
+<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 26/10/2026 10:45</div></div>
 <div class="main" id="main"></div></div>
 <div class="mo hidden" id="mo"><div class="mb" id="mbx"><h3 id="mt"></h3><div id="mbody"></div><div id="er"></div>
 <div class="r"><button class="btn btn-o" onclick="cm()">Đóng</button><button class="btn" id="ok">Lưu</button></div></div></div>
@@ -124,7 +124,7 @@ body.nvo .nav{transform:none}body.nvo .ov{display:block;position:fixed;inset:56p
 <script>
 const API='https://script.google.com/macros/s/AKfycbxFyMV07upxQXxrmRsLF3IAsJYtQsoiujhb7UIK_8eCDDGDHC7vjzcRdF53mvYtDpU/exec';
 const $=id=>document.getElementById(id),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ST=['Tốt','Thiết bị đang sự cố','Đang sửa chữa'],COL={'Tốt':'#1e7e4f','Thiết bị đang sự cố':'#c0392b','Đang sửa chữa':'#1a56b8'};
+const ST=['Tốt','Thiết bị gặp sự cố','Đang sửa chữa'],COL={'Tốt':'#1e7e4f','Thiết bị gặp sự cố':'#c0392b','Đang sửa chữa':'#1a56b8'};
 const SYS=['Hệ thống PSR/MSSR','Hệ thống VCCS','Hệ thống VHF','Hệ thống RAPS','Hệ thống KVM','Hệ thống Radar thời tiết WRS400','Hệ thống ATM'];
 const CAB0={'Hệ thống PSR/MSSR':['Phân hệ Anten','Tủ điều khiển Anten','Tủ máy phát sơ cấp','Tủ máy thu sơ cấp','Tủ thu-phát thứ cấp','Tủ truyền dẫn tín hiệu','Tủ Test Transponder','Tủ PSR-MSSR (Phòng trực kỹ thuật ATCT)']};
 const TB=g=>{const b=CAB0[g];if(!b)return null;const ex=[...new Set([...D.equip,...D.spare].filter(x=>x.nhom===g&&x.tu&&!b.includes(x.tu)).map(x=>x.tu))].sort((p,q)=>String(p).localeCompare(String(q),'vi'));return[...b,...ex]};
@@ -141,7 +141,7 @@ const th=id=>`https://drive.google.com/thumbnail?id=${id}&sz=w300`;
 const nmE=id=>nm(D.equip.find(x=>x.id==id)||{})||id,nmS=id=>nm(D.spare.find(x=>x.id==id)||{})||id;
 let tt;function toast(m,er){const t=$('toast');t.textContent=m;t.className='toast'+(er?' er':'');clearTimeout(tt);tt=setTimeout(()=>t.textContent='',2800)}
 const fxS=o=>{(o.log||[]).forEach(l=>{if(l.loai==='Bảo trì')l.loai='Bảo dưỡng định kỳ'});return fxS0(o)};
-const fxS0=o=>['equip','spare'].forEach(k=>(o[k]||[]).forEach(x=>{x.stt=String(x.stt??'').replace(/,/g,'.');if(x.tt==='Hư hỏng')x.tt='Thiết bị đang sự cố';if(x.tt==='Cảnh báo')x.tt='Tốt'}));   // số thứ tự dạng 5,1 -> 5.1
+const fxS0=o=>['equip','spare'].forEach(k=>(o[k]||[]).forEach(x=>{x.stt=String(x.stt??'').replace(/,/g,'.');if(x.tt==='Hư hỏng'||x.tt==='Thiết bị đang sự cố')x.tt='Thiết bị gặp sự cố';if(x.tt==='Cảnh báo')x.tt='Tốt'}));   // số thứ tự dạng 5,1 -> 5.1
 async function api(a,p={}){const r=await fetch(API,{method:'POST',body:JSON.stringify({a,tk:TK,...p})}),j=await r.json();if(j.err)throw new Error(j.err);fxS(j.d||j);return j}
 async function dn(){$('le').textContent='';$('lb').disabled=true;try{const j=await api('login',{u:$('lu').value.trim(),p:$('lp').value});TK=j.tk;U=j.us;D=j.d;
  $('login').classList.add('hidden');$('un').textContent=U.ten;$('ur').textContent=adm()?'Quản trị':'Chỉ xem';render()}catch(e){$('le').textContent=e.message}$('lb').disabled=false}
