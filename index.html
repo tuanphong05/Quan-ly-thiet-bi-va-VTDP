@@ -113,7 +113,7 @@ body.nvo .nav{transform:none}body.nvo .ov{display:block;position:fixed;inset:56p
 <div class="shell">
 <div class="nav"><div class="nu"><span id="un">-</span><small id="ur"></small></div>
 <div class="na"><button class="btn btn-o btn-s" style="width:100%" onclick="location.reload()">Đăng xuất</button></div>
-<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 26/10/2026 15:10</div></div>
+<div class="ml" id="menu"></div><div class="nh">Dữ liệu lưu trên Google Sheets<br>Phiên bản web: 26/10/2026 15:35</div></div>
 <div class="main" id="main"></div></div>
 <div class="mo hidden" id="mo"><div class="mb" id="mbx"><h3 id="mt"></h3><div id="mbody"></div><div id="er"></div>
 <div class="r"><button class="btn btn-o" onclick="cm()">Đóng</button><button class="btn" id="ok">Lưu</button></div></div></div>
@@ -167,8 +167,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.add('hi
 
 const FD=t=>[['nhom','Thuộc nhóm hệ thống','dl'],['tu','Phân hệ / Tủ thiết bị','tu'],
 ...MAU.map(([k,l])=>k==='tinhtrang'?[k,l,'ds']:k==='ghichu'?[k,l,'ta2']:k==='sl'?[k,l]:[k,l]),
-['tt','Tình trạng hoạt động','sel'],...(t==='spare'?[['cauhinh','Tình trạng cấu hình (VD: đã cài ghost của RHP2)','ta2']]:[]),
-['anh',t==='equip'?'Ảnh thiết bị':'Ảnh vật tư','img'],...(t==='spare'?[['anhtem','Ảnh tem quản lý vật tư dự phòng','img']]:[])];
+['tt','Tình trạng hoạt động','sel'],...(t==='spare'?[['cauhinh','Tình trạng cấu hình (VD: đã cài ghost của RHP2)','ta2']]:[])];
 const tuH=(n,v)=>{const a=CAB[n]||[];return a.length?`<label>Phân hệ / Tủ thiết bị</label><select id="f_tu"><option value="">-- Chọn tủ --</option>${[...a,...(v&&!a.includes(v)?[v]:[])].map(x=>`<option ${x==v?'selected':''}>${E(x)}</option>`).join('')}</select>`:`<input type="hidden" id="f_tu" value="">`};
 const rt=()=>{$('tuw').innerHTML=tuH($('f_nhom').value,'')};
 function fld([k,l,t],o){const v=o[k]??'';let i;
