@@ -17,7 +17,7 @@ const H = {
   fail: 'id,equipId,ngay,mota,nguyennhan,khacphuc,nguoi,ngaykp,anhhuong',
   log: 'id,equipId,ngay,loai,noidung,thuchien,ketqua,tiep,nguoi,capnhat,xacnhan,xnnguoi',   // nhật ký bảo trì, bảo dưỡng của từng thiết bị
   cfg: 'id,spareId,ngay,nguoi,noidung',
-  swap: 'id,ngay,nguoi,equipId,spareId,sl,ghichu',
+  swap: 'id,ngay,nguoi,equipId,spareId,sl,ghichu,thoigian,nguoitt,ttsau',
   users: 'user,pass,role,ten'
 };
 const today = () => Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd');
@@ -105,7 +105,9 @@ function doPost(e) {
         if (!sp || !(sl >= 1) || sl > co) throw Error('Không đủ số lượng vật tư dự phòng');
         const dv = String(sp.sl).replace(/^[\s\d.,]+/, '').trim();   // giữ nguyên đơn vị tính nếu có
         sp.sl = (co - sl) + (dv ? ' ' + dv : ''); sp.capnhat = today(); sp.nguoi = us.ten; wr('spare', sp);
-        wr('swap', { id: nid(), ngay: today(), nguoi: us.ten, equipId: o.equipId, spareId: o.spareId, sl, ghichu: o.ghichu });
+        wr('swap', { id: nid(), ngay: today(), nguoi: us.ten, equipId: o.equipId, spareId: o.spareId, sl, ghichu: o.ghichu,
+          thoigian: o.thoigian, nguoitt: o.nguoitt, ttsau: o.ttsau });
+        if (['Tốt', 'Thiết bị gặp sự cố', 'Đang sửa chữa'].indexOf(o.ttsau) >= 0) capNhatSauThay(o.equipId, o.ttsau, sp.ten, us);
         r = all();
       } else if (q.a === 'up') {
         const f = DriveApp.getFolderById(FOLDER_ID).createFile(
@@ -203,4 +205,19 @@ function xuLyNhatKy(o, us) {
   if (o.xacnhan)
     rd('fail').filter(f => f.equipId == o.equipId && !String(f.khacphuc || '').trim())
       .forEach(f => { f.khacphuc = 'Đã sửa chữa: ' + (o.noidung || ''); f.ngaykp = today(); wr('fail', f); });
+}
+
+// Sau khi thay thế: đặt "Tình trạng hoạt động" của thiết bị theo lựa chọn của người dùng.
+// Nếu chọn "Tốt": các sự cố đang mở của thiết bị tự đóng, các lần sửa chữa chưa xác nhận tự được xác nhận.
+function capNhatSauThay(eid, ttsau, tenVT, us) {
+  let sh = 'equip', e = rd('equip').find(x => x.id == eid);
+  if (!e) { sh = 'spare'; e = rd('spare').find(x => x.id == eid); }
+  if (!e) return;
+  if (ttsau === 'Tốt') {
+    rd('fail').filter(f => f.equipId == eid && !String(f.khacphuc || '').trim())
+      .forEach(f => { f.khacphuc = 'Đã thay thế bằng vật tư dự phòng: ' + tenVT; f.ngaykp = today(); wr('fail', f); });
+    rd('log').filter(l => l.equipId == eid && l.loai === 'Sửa chữa' && !String(l.xacnhan || '').trim())
+      .forEach(l => { l.xacnhan = today(); l.xnnguoi = us.ten; wr('log', l); });
+  }
+  if (e.tt !== ttsau) { e.tt = ttsau; e.capnhat = today(); e.nguoi = us.ten; wr(sh, e); }
 }
