@@ -9,9 +9,9 @@
 //   - Dòng chỉ có 1 ô chữ ở cột khác              -> tên phân hệ / tủ (VD "Phân hệ Anten"), hiện thành tab trên web
 //   - Các dòng còn lại có tên                     -> vật tư (khối thiết bị hoặc vật tư dự phòng)
 const NHAP = {
-  NGUON: 'Phân hệ anten',                    // tên tab chứa bảng theo mẫu
+  NGUON: 'Thiết bị ADS-B',                   // tên tab chứa bảng theo mẫu
   DICH: 'equip',                             // 'equip' = Khối thiết bị | 'spare' = Vật tư dự phòng
-  NHOM: 'Hệ thống PSR/MSSR',   // phải trùng đúng 1 trong 8 hệ thống trên web (VD: 'Hệ thống SMR')
+  NHOM: 'Hệ thống ADS-B',   // phải trùng đúng 1 trong 9 hệ thống trên web (VD: 'Hệ thống ADS-B')
   TU: '',  // để trống = lấy tên phân hệ ghi trong sheet; điền tên để ép tất cả vào một tab
   TU_CU: 'Tủ ACU'                               // chỉ dùng cho hàm thayTheTu: tên tủ cũ cần thay thế
 };
@@ -63,6 +63,8 @@ function docMau() {
     }
     const ten = get(i, 'ten') || get(i, 'tenkt') || get(i, 'loai');
     if (!ten) continue;
+    const st0 = get(i, 'stt');
+    if (st0 && !SO.test(st0) && ten === st0) continue;     // dòng tên hệ thống (VD "SMR" lặp ở nhiều cột) -> bỏ qua, không phải thiết bị
     const o = {
       stt: get(i, 'stt').replace(/,/g, '.'), loai: get(i, 'loai'), tenkt: get(i, 'tenkt'), ten,
       sl: get(i, 'sl') || '1', sn: get(i, 'sn'), pn: get(i, 'pn'), hang: get(i, 'hang'), xuatxu: get(i, 'xuatxu'),
@@ -147,6 +149,22 @@ function xoaTu() {
       if (v[i][ci] === NHAP.TU_CU && v[i][ni] === NHAP.NHOM) { dst.deleteRow(i + 1); n++; }
   });
   Logger.log('Đã xóa ' + n + ' dòng của "' + NHAP.TU_CU + '" (có sao lưu trước khi xóa).');
+}
+
+// XÓA DÒNG TÊN HỆ THỐNG đã lỡ nhập thành thiết bị (VD dòng "SMR" có Số thứ tự = Tên = "SMR").
+// Chỉ xóa dòng thuộc NHAP.NHOM mà Số thứ tự không phải số và trùng Tên. Có sao lưu trước khi xóa.
+function xoaDongTenHeThong() {
+  let n = 0;
+  ['equip', 'spare'].forEach(k => {
+    const dst = SS().getSheetByName(k); if (!dst) return;
+    const h = hdr(k), si = h.indexOf('stt'), ti = h.indexOf('ten'), ni = h.indexOf('nhom');
+    const v = dst.getDataRange().getDisplayValues();
+    const bad = r => r[ni] === NHAP.NHOM && r[si] && !SO.test(r[si]) && r[si] === r[ti];
+    if (!v.slice(1).some(bad)) return;
+    dst.copyTo(SS()).setName('saoluu_' + k + '_' + Utilities.formatDate(new Date(), 'GMT+7', 'yyyyMMdd_HHmmss'));
+    for (let i = v.length - 1; i >= 1; i--) if (bad(v[i])) { dst.deleteRow(i + 1); n++; }
+  });
+  Logger.log('Đã xóa ' + n + ' dòng tên hệ thống (có sao lưu trước khi xóa).');
 }
 
 // KIỂM TRA: ghi vào nhật ký số dòng của từng (nhóm hệ thống | tủ) trong sheet equip và spare.
