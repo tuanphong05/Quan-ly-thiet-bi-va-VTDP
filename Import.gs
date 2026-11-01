@@ -9,9 +9,9 @@
 //   - Dòng chỉ có 1 ô chữ ở cột khác              -> tên phân hệ / tủ (VD "Phân hệ Anten"), hiện thành tab trên web
 //   - Các dòng còn lại có tên                     -> vật tư (khối thiết bị hoặc vật tư dự phòng)
 const NHAP = {
-  NGUON: 'Thiết bị MLAT',                   // tên tab chứa bảng theo mẫu
+  NGUON: 'Thiết bị MIPS',                   // tên tab chứa bảng theo mẫu
   DICH: 'equip',                             // 'equip' = Khối thiết bị | 'spare' = Vật tư dự phòng
-  NHOM: 'Hệ thống MLAT',   // phải trùng đúng 1 trong 10 hệ thống trên web (VD: 'Hệ thống MLAT')
+  NHOM: 'Hệ thống MIPS',   // phải trùng đúng 1 trong 11 hệ thống trên web (VD: 'Hệ thống MIPS')
   TU: '',  // để trống = lấy tên phân hệ ghi trong sheet; điền tên để ép tất cả vào một tab
   TU_CU: 'Tủ ACU'                               // chỉ dùng cho hàm thayTheTu: tên tủ cũ cần thay thế
 };
