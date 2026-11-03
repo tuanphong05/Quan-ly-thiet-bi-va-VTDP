@@ -9,9 +9,9 @@
 //   - Dòng chỉ có 1 ô chữ ở cột khác              -> tên phân hệ / tủ (VD "Phân hệ Anten"), hiện thành tab trên web
 //   - Các dòng còn lại có tên                     -> vật tư (khối thiết bị hoặc vật tư dự phòng)
 const NHAP = {
-  NGUON: 'Thiết bị AIM',                   // tên tab chứa bảng theo mẫu
+  NGUON: 'Thiết bị VHF - Tx',                   // tên tab chứa bảng theo mẫu
   DICH: 'equip',                             // 'equip' = Khối thiết bị | 'spare' = Vật tư dự phòng
-  NHOM: 'Hệ thống AIM',   // phải trùng đúng 1 trong 18 hệ thống trên web (VD: 'Hệ thống AIM')
+  NHOM: 'Hệ thống VHF - Tx',   // phải trùng đúng 1 trong 19 hệ thống trên web (VD: 'Hệ thống VHF - Tx')
   TU: '',  // để trống = lấy tên phân hệ ghi trong sheet; điền tên để ép tất cả vào một tab
   TU_CU: 'Tủ ACU'                               // chỉ dùng cho hàm thayTheTu: tên tủ cũ cần thay thế
 };
@@ -102,7 +102,7 @@ function nhapTheoMau() {
 }
 
 // Điền Số thứ tự (cột stt) cho các dòng ĐÃ nhập trước đó mà còn trống, lấy từ sheet nguồn. Không xóa/không thêm dòng nào.
-function capNhatSTT() {
+function capNhatSTT(ghiDe) {
   const items = docMau(), q = new Map();
   items.forEach(o => { const k = kh(o); if (!q.has(k)) q.set(k, []); q.get(k).push(o.stt); });
   const s = SS().getSheetByName(NHAP.DICH); hdr(NHAP.DICH);
@@ -110,7 +110,7 @@ function capNhatSTT() {
   const idx = {}; ['nhom', 'tu', 'loai', 'tenkt', 'ten', 'pn', 'sn'].forEach(c => idx[c] = h.indexOf(c));
   let n = 0;
   const col = v.slice(1).map(r => {
-    if (r[ci] !== '' || r[0] === '') return [r[ci]];
+    if ((r[ci] !== '' && !ghiDe) || r[0] === '') return [r[ci]];
     const k = kh(Object.fromEntries(Object.keys(idx).map(c => [c, r[idx[c]]]))), a = q.get(k);
     if (a && a.length) { n++; return [a.shift()]; }
     return [r[ci]];
@@ -118,6 +118,11 @@ function capNhatSTT() {
   if (col.length) s.getRange(2, ci + 1, col.length, 1).setNumberFormat('@').setValues(col);
   Logger.log('Đã điền số thứ tự cho ' + n + ' dòng.');
 }
+
+// ĐỒNG BỘ LẠI SỐ THỨ TỰ: ghi ĐÈ cột stt của các dòng đã nhập bằng số thứ tự hiện có trong sheet nguồn (NHAP.NGUON).
+// Dùng khi bạn sửa số thứ tự trong sheet nguồn rồi mà web chưa đổi. Không xóa, không thêm dòng nào.
+// Dòng được nhận ra bằng: hệ thống, tủ, loại, tên kỹ thuật, tên sử dụng, Part Number, Serial Number (phải còn giống sheet nguồn).
+function dongBoSTT() { capNhatSTT(true); }
 
 // THAY THẾ dữ liệu của một tủ: sao lưu sheet đích, xóa các dòng có phân hệ/tủ = NHAP.TU_CU, rồi nhập lại từ sheet nguồn.
 // VD: đặt NGUON = 'Tủ điều khiển Anten', TU = 'Tủ điều khiển Anten', TU_CU = 'Tủ ACU' rồi chạy thayTheTu.
