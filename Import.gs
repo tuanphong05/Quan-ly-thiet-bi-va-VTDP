@@ -101,6 +101,37 @@ function nhapTheoMau() {
   Logger.log('Đã nhập ' + out.length + ' dòng vào sheet ' + NHAP.DICH + ' (phân hệ: ' + (NHAP.TU || 'theo sheet') + ').');
 }
 
+// CẬP NHẬT LẠI TOÀN BỘ MỘT HỆ THỐNG theo sheet nguồn: dùng khi bạn đã sửa NỘI DUNG (tên, Serial Number, số lượng, hãng...) trong sheet nguồn.
+// Cách hoạt động: sao lưu sheet đích -> đọc lại sheet nguồn -> các dòng của NHAP.NHOM được thay bằng nội dung mới.
+//   - Dòng KHÔNG đổi khóa nhận diện (tủ, loại, tên, Part/Serial Number) giữ nguyên mã, tình trạng, ảnh, cấu hình => nhật ký, sự cố vẫn còn.
+//   - Dòng bị sửa khóa nhận diện được coi là dòng mới (nhật ký/sự cố cũ của dòng đó không còn gắn với thiết bị).
+//   - Dòng bị xóa khỏi sheet nguồn sẽ bị xóa khỏi web.
+function capNhatHeThong() {
+  const dst = SS().getSheetByName(NHAP.DICH), h = hdr(NHAP.DICH);
+  const moi = docMau();
+  if (!moi.length) throw Error('Sheet nguồn "' + NHAP.NGUON + '" không có dòng thiết bị nào, dừng để tránh xóa nhầm.');
+  const cu = rd(NHAP.DICH).filter(x => x.nhom === NHAP.NHOM), q = new Map();
+  cu.forEach(x => { const k = kh(x); if (!q.has(k)) q.set(k, []); q.get(k).push(x); });
+  let giu = 0, them = 0;
+  const out = moi.map(o => {
+    const a = q.get(kh(o));
+    if (a && a.length) {
+      const old = a.shift(); giu++;
+      return Object.assign({}, old, o, { id: old.id, tt: old.tt || o.tt, capnhat: today(), nguoi: 'Cập nhật từ sheet gốc' });
+    }
+    them++;
+    return Object.assign({ id: nid(), anh: '', anhtem: '', cauhinh: '', capnhat: today(), nguoi: 'Nhập từ sheet gốc' }, o);
+  });
+  const xoa = cu.length - giu;
+  dst.copyTo(SS()).setName('saoluu_' + NHAP.DICH + '_' + Utilities.formatDate(new Date(), 'GMT+7', 'yyyyMMdd_HHmmss'));
+  const v = dst.getDataRange().getDisplayValues(), ni = h.indexOf('nhom');
+  for (let i = v.length - 1; i >= 1; i--) if (v[i][ni] === NHAP.NHOM) dst.deleteRow(i + 1);
+  const dau = dst.getLastRow() + 1, cuoi = dau + out.length - 1;
+  if (cuoi > dst.getMaxRows()) dst.insertRowsAfter(dst.getMaxRows(), cuoi - dst.getMaxRows());
+  dst.getRange(dau, 1, out.length, h.length).setValues(out.map(o => h.map(c => o[c] ?? '')));
+  Logger.log('Hệ thống "' + NHAP.NHOM + '": giữ mã cho ' + giu + ' dòng, thêm mới ' + them + ' dòng, loại bỏ ' + xoa + ' dòng cũ (đã sao lưu sheet trước khi sửa).');
+}
+
 // Điền Số thứ tự (cột stt) cho các dòng ĐÃ nhập trước đó mà còn trống, lấy từ sheet nguồn. Không xóa/không thêm dòng nào.
 function capNhatSTT(ghiDe) {
   const items = docMau(), q = new Map();
