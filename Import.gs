@@ -9,12 +9,21 @@
 //   - Dòng chỉ có 1 ô chữ ở cột khác              -> tên phân hệ / tủ (VD "Phân hệ Anten"), hiện thành tab trên web
 //   - Các dòng còn lại có tên                     -> vật tư (khối thiết bị hoặc vật tư dự phòng)
 const NHAP = {
-  NGUON: 'Thiết bị VHF - Rx',                   // tên tab chứa bảng theo mẫu
-  DICH: 'equip',                             // 'equip' = Khối thiết bị | 'spare' = Vật tư dự phòng
-  NHOM: 'Hệ thống VHF - Rx',   // phải trùng đúng 1 trong 19 hệ thống trên web (VD: 'Hệ thống VHF - Rx')
+  NGUON: 'Spare VHF',                   // tên tab chứa bảng theo mẫu
+  DICH: 'spare',                             // 'equip' = Khối thiết bị | 'spare' = Vật tư dự phòng
+  NHOM: 'Hệ thống VHF - Tx',   // phải trùng đúng 1 trong 19 hệ thống trên web (VD: 'Hệ thống VHF - Rx')
   TU: '',  // để trống = lấy tên phân hệ ghi trong sheet; điền tên để ép tất cả vào một tab
   TU_CU: 'Tủ ACU'                               // chỉ dùng cho hàm thayTheTu: tên tủ cũ cần thay thế
 };
+
+// Nhập CÙNG MỘT sheet nguồn vào NHIỀU hệ thống (mỗi hệ thống nhận một bản đầy đủ, số lượng mỗi bên tính riêng).
+// Đặt NGUON, DICH như trên rồi liệt kê các hệ thống ở DS_NHOM. Chạy lại an toàn: dòng đã có không bị nhân đôi.
+const DS_NHOM = ['Hệ thống VHF - Tx', 'Hệ thống VHF - Rx'];
+function nhapNhieuHeThong() {
+  const goc = NHAP.NHOM;
+  try { DS_NHOM.forEach(n => { NHAP.NHOM = n; Logger.log('--- ' + n); nhapTheoMau(); }); }
+  finally { NHAP.NHOM = goc; }
+}
 
 // tên tiêu đề (viết thường, bỏ dấu) -> trường dữ liệu
 const BO_COT = {
