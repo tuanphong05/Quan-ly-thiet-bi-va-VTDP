@@ -184,9 +184,9 @@ function chuyenMau() {
 }
 
 // Chạy 1 LẦN khi đổi tên một nhóm hệ thống: đổi giá trị cột nhom trong các sheet equip và spare.
-// Sửa 2 dòng dưới rồi chạy. Mặc định: "Hệ thống PSR/MSSR Easat EA29190" -> "Hệ thống PSR/MSSR".
+// Sửa 2 dòng dưới rồi chạy. Mặc định: "Hệ thống ATM" -> "Hệ thống ATM Indra".
 function doiTenNhom() {
-  const CU = 'Hệ thống PSR/MSSR Easat EA29190', MOI = 'Hệ thống PSR/MSSR';
+  const CU = 'Hệ thống ATM', MOI = 'Hệ thống ATM Indra';
   let n = 0;
   ['equip', 'spare'].forEach(k => {
     const s = SS().getSheetByName(k), h = hdr(k), r = s.getLastRow();
