@@ -9,9 +9,9 @@
 //   - Dòng chỉ có 1 ô chữ ở cột khác              -> tên phân hệ / tủ (VD "Phân hệ Anten"), hiện thành tab trên web
 //   - Các dòng còn lại có tên                     -> vật tư (khối thiết bị hoặc vật tư dự phòng)
 const NHAP = {
-  NGUON: 'Thiết bị đường truyền - G17 ATCT',                   // tên tab chứa bảng theo mẫu
+  NGUON: 'Thiết bị TMS - Tx Rx',                   // tên tab chứa bảng theo mẫu
   DICH: 'equip',                             // 'equip' = Khối thiết bị | 'spare' = Vật tư dự phòng
-  NHOM: 'Hệ thống đường truyền G17 - ATCT',   // phải trùng đúng 1 trong 19 hệ thống trên web (VD: 'Hệ thống đường truyền G17 - ATCT')
+  NHOM: 'Hệ thống TMS - Tx Rx',   // phải trùng đúng 1 trong 19 hệ thống trên web (VD: 'Hệ thống TMS - Tx Rx')
   TU: '',  // để trống = lấy tên phân hệ ghi trong sheet; điền tên để ép tất cả vào một tab
   TU_CU: 'Tủ ACU'                               // chỉ dùng cho hàm thayTheTu: tên tủ cũ cần thay thế
 };
@@ -108,6 +108,26 @@ function nhapTheoMau() {
   if (cuoi > dst.getMaxRows()) dst.insertRowsAfter(dst.getMaxRows(), cuoi - dst.getMaxRows());
   dst.getRange(dau, 1, out.length, h.length).setValues(out.map(o => h.map(c => o[c] ?? '')));
   Logger.log('Đã nhập ' + out.length + ' dòng vào sheet ' + NHAP.DICH + ' (phân hệ: ' + (NHAP.TU || 'theo sheet') + ').');
+}
+
+// CHẨN ĐOÁN CỘT: cho biết từng tiêu đề cột trong sheet nguồn có được nhận ra không, và so sánh giá trị sheet nguồn với sheet web (equip/spare).
+// Chạy hàm này khi sửa sheet nguồn mà web không đổi, rồi xem Nhật ký chạy.
+function kiemTraCot() {
+  const src = SS().getSheetByName(NHAP.NGUON);
+  if (!src) throw Error('Không tìm thấy sheet "' + NHAP.NGUON + '"');
+  const raw = src.getDataRange().getDisplayValues();
+  let best = -1, bn = 0;
+  for (let i = 0; i < Math.min(raw.length, 15); i++) {
+    const n = raw[i].filter(t => BO_COT[chuan(t)]).length; if (n > bn) { bn = n; best = i; }
+  }
+  if (best < 0) throw Error('Không thấy dòng tiêu đề');
+  Logger.log('Dòng tiêu đề: dòng ' + (best + 1) + ' của sheet "' + NHAP.NGUON + '"');
+  raw[best].forEach((t, j) => { if (String(t).trim()) Logger.log('Cột ' + (j + 1) + ' "' + t + '" -> ' + (BO_COT[chuan(t)] || 'KHÔNG NHẬN RA (bị bỏ qua)')); });
+  const moi = docMau().slice(0, 3), cu = rd(NHAP.DICH).filter(x => x.nhom === NHAP.NHOM);
+  moi.forEach(o => {
+    const c = cu.find(x => kh(x) === kh(o));
+    Logger.log('Dòng "' + o.ten + '": sheet nguồn hethong="' + o.hethong + '" | web (' + NHAP.DICH + ') hethong="' + (c ? c.hethong : '(không thấy dòng này)') + '"');
+  });
 }
 
 // CẬP NHẬT LẠI TOÀN BỘ MỘT HỆ THỐNG theo sheet nguồn: dùng khi bạn đã sửa NỘI DUNG (tên, Serial Number, số lượng, hãng...) trong sheet nguồn.
