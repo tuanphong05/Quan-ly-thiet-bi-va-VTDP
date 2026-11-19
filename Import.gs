@@ -9,9 +9,9 @@
 //   - Dòng chỉ có 1 ô chữ ở cột khác              -> tên phân hệ / tủ (VD "Phân hệ Anten"), hiện thành tab trên web
 //   - Các dòng còn lại có tên                     -> vật tư (khối thiết bị hoặc vật tư dự phòng)
 const NHAP = {
-  NGUON: 'Thiết bị VHF G17 - Rx',                   // tên tab chứa bảng theo mẫu
+  NGUON: 'Thiết bị Lightgun',                   // tên tab chứa bảng theo mẫu
   DICH: 'equip',                             // 'equip' = Khối thiết bị | 'spare' = Vật tư dự phòng
-  NHOM: 'Hệ thống VHF G17 - Rx',   // phải trùng đúng 1 trong 19 hệ thống trên web (VD: 'Hệ thống VHF G17 - Rx')
+  NHOM: 'Thiết bị Lightgun',   // phải trùng đúng 1 trong 19 hệ thống trên web (VD: 'Thiết bị Lightgun')
   TU: '',  // để trống = lấy tên phân hệ ghi trong sheet; điền tên để ép tất cả vào một tab
   TU_CU: 'Tủ ACU'                               // chỉ dùng cho hàm thayTheTu: tên tủ cũ cần thay thế
 };
@@ -40,9 +40,15 @@ const chuan = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-�
   .replace(/đ/g, 'd').replace(/\s+/g, ' ').trim();
 
 // Tìm tab nguồn theo tên, BỎ QUA khoảng trắng thừa ở đầu/cuối tên tab (VD tab "Thiết bị ATM G18 " có dấu cách cuối)
+// Nếu không có tab trùng tên, tự chọn tab chỉ khác về dấu gạch, khoảng trắng, hoa/thường (chỉ khi có đúng 1 tab như vậy).
 function tabNguon() {
-  const ten = String(NHAP.NGUON).trim();
-  return SS().getSheets().find(x => x.getName().trim() === ten) || null;
+  const ten = String(NHAP.NGUON).trim(), ds = SS().getSheets();
+  const kq = x => chuan(x).replace(/[^a-z0-9]/g, '');
+  const ct = ds.find(x => x.getName().trim() === ten);
+  if (ct) return ct;
+  const gan = ds.filter(x => kq(x.getName()) === kq(ten));
+  if (gan.length === 1) { Logger.log('Lưu ý: không có tab "' + ten + '", dùng tab gần giống là "' + gan[0].getName() + '"'); return gan[0]; }
+  return null;
 }
 
 // Đọc sheet nguồn theo mẫu, trả về danh sách vật tư (chưa kiểm tra trùng)
