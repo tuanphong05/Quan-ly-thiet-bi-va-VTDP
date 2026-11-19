@@ -9,9 +9,9 @@
 //   - Dòng chỉ có 1 ô chữ ở cột khác              -> tên phân hệ / tủ (VD "Phân hệ Anten"), hiện thành tab trên web
 //   - Các dòng còn lại có tên                     -> vật tư (khối thiết bị hoặc vật tư dự phòng)
 const NHAP = {
-  NGUON: 'Thiết bị ATM G18',                   // tên tab chứa bảng theo mẫu
+  NGUON: 'Thiết bị VHF G17 - Rx',                   // tên tab chứa bảng theo mẫu
   DICH: 'equip',                             // 'equip' = Khối thiết bị | 'spare' = Vật tư dự phòng
-  NHOM: 'Hệ thống ATM G18',   // phải trùng đúng 1 trong 19 hệ thống trên web (VD: 'Hệ thống ATM G18')
+  NHOM: 'Hệ thống VHF G17 - Rx',   // phải trùng đúng 1 trong 19 hệ thống trên web (VD: 'Hệ thống VHF G17 - Rx')
   TU: '',  // để trống = lấy tên phân hệ ghi trong sheet; điền tên để ép tất cả vào một tab
   TU_CU: 'Tủ ACU'                               // chỉ dùng cho hàm thayTheTu: tên tủ cũ cần thay thế
 };
@@ -39,10 +39,16 @@ const BO_COT = {
 const chuan = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/đ/g, 'd').replace(/\s+/g, ' ').trim();
 
+// Tìm tab nguồn theo tên, BỎ QUA khoảng trắng thừa ở đầu/cuối tên tab (VD tab "Thiết bị ATM G18 " có dấu cách cuối)
+function tabNguon() {
+  const ten = String(NHAP.NGUON).trim();
+  return SS().getSheets().find(x => x.getName().trim() === ten) || null;
+}
+
 // Đọc sheet nguồn theo mẫu, trả về danh sách vật tư (chưa kiểm tra trùng)
 function docMau() {
-  const src = SS().getSheetByName(NHAP.NGUON);
-  if (!src) throw Error('Không tìm thấy sheet "' + NHAP.NGUON + '"');
+  const src = tabNguon();
+  if (!src) throw Error('Không tìm thấy sheet "' + NHAP.NGUON + '". Các tab hiện có: ' + SS().getSheets().map(x => '"' + x.getName() + '"').join(', '));
   if (NHAP.DICH !== 'equip' && NHAP.DICH !== 'spare') throw Error('DICH phải là "equip" hoặc "spare"');
   const rg = src.getDataRange(), raw = rg.getDisplayValues(), v = raw.map(r => r.slice());
   // Ô gộp chỉ giữ giá trị ở ô đầu: chép giá trị đó ra cả vùng gộp (dùng giá trị hiển thị nên giữ nguyên số 0 đầu của Serial)
@@ -113,7 +119,7 @@ function nhapTheoMau() {
 // CHẨN ĐOÁN CỘT: cho biết từng tiêu đề cột trong sheet nguồn có được nhận ra không, và so sánh giá trị sheet nguồn với sheet web (equip/spare).
 // Chạy hàm này khi sửa sheet nguồn mà web không đổi, rồi xem Nhật ký chạy.
 function kiemTraCot() {
-  const src = SS().getSheetByName(NHAP.NGUON);
+  const src = tabNguon();
   if (!src) throw Error('Không tìm thấy sheet "' + NHAP.NGUON + '"');
   const raw = src.getDataRange().getDisplayValues();
   let best = -1, bn = 0;
@@ -188,7 +194,7 @@ function dongBoSTT() { capNhatSTT(true); }
 // VD: đặt NGUON = 'Tủ điều khiển Anten', TU = 'Tủ điều khiển Anten', TU_CU = 'Tủ ACU' rồi chạy thayTheTu.
 function thayTheTu() {
   if (!NHAP.TU_CU) throw Error('Chưa điền TU_CU');
-  if (!SS().getSheetByName(NHAP.NGUON)) throw Error('Không tìm thấy sheet "' + NHAP.NGUON + '"');
+  if (!tabNguon()) throw Error('Không tìm thấy sheet "' + NHAP.NGUON + '"');
   const dst = SS().getSheetByName(NHAP.DICH), h = hdr(NHAP.DICH), ci = h.indexOf('tu'), ni = h.indexOf('nhom');
   const v = dst.getDataRange().getDisplayValues();
   dst.copyTo(SS()).setName('saoluu_' + NHAP.DICH + '_' + Utilities.formatDate(new Date(), 'GMT+7', 'yyyyMMdd_HHmmss'));
